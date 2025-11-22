@@ -1,3 +1,9 @@
+import { PageTitle } from "@/components/app/page-title";
+
 export default function DashboardReportPage() {
-    return <div></div>;
+    return (
+        <div className="w-full flex flex-col justify-center p-4">
+            <PageTitle>Reports</PageTitle>
+        </div>
+    );
 }

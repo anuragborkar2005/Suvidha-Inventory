@@ -125,7 +125,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     items: [
                         { title: "General", url: "#" },
                         { title: "Users & Roles", url: "#" },
-                        { title: "Billing", url: "#" },
                     ],
                     roles: ["admin"],
                 },
@@ -176,7 +175,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     </SidebarMenuItem>
                 </SidebarMenu>
             </SidebarHeader>
-            <SidebarContent>
+            <SidebarContent className="scrollbar-hide">
                 <NavMain items={data.navMain} />
                 <NavProjects projects={data.projects} />
                 <NavSecondary items={data.navSecondary} className="mt-auto" />

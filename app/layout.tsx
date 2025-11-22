@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
+import { Toaster } from "@/components/ui/sonner";
 
 const dmSans = localFont({
     src: "./font/DM_Sans.ttf",
@@ -20,6 +21,7 @@ export default function RootLayout({
         <html lang="en">
             <body className={`${dmSans.className} antialiased`}>
                 {children}
+                <Toaster richColors position="top-right" />
             </body>
         </html>
     );
