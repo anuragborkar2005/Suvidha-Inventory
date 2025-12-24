@@ -101,7 +101,12 @@ export function SignupForm({
                             </p>
                             <ul>
                                 {state.errors.password.map((error) => (
-                                    <li key={error}>- {error}</li>
+                                    <li
+                                        className="text-red-700 text-xs"
+                                        key={error}
+                                    >
+                                        - {error}
+                                    </li>
                                 ))}
                             </ul>
                         </div>

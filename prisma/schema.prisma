@@ -26,7 +26,8 @@ model User {
 }
 
 model Product {
-  id             String   @id @db.Text
+  id             String   @id @default(cuid())
+  barcode        String?  @db.VarChar(255) @unique
   name           String   @db.VarChar(255)
   category       String   @default("general") @db.VarChar(100)
   stockQuantity  Int      @default(0) @map("stock_quantity")

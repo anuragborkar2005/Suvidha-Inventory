@@ -1,31 +1,23 @@
 -- CreateEnum
 CREATE TYPE "Role" AS ENUM ('superadmin', 'admin', 'staff');
 
--- Create sequence for Product IDs
-CREATE SEQUENCE IF NOT EXISTS product_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
--- CreateTable users
+-- CreateTable
 CREATE TABLE "users" (
     "id" TEXT NOT NULL,
     "name" VARCHAR(255) NOT NULL,
     "email" VARCHAR(255) NOT NULL,
     "password" VARCHAR(255) NOT NULL,
     "role" "Role" NOT NULL DEFAULT 'staff',
-    "refreshToken" TEXT,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "users_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable products with custom prefixed ID
+-- CreateTable
 CREATE TABLE "products" (
-    "id" TEXT NOT NULL DEFAULT 'PRD-' || LPAD(nextval('product_seq')::TEXT, 5, '0'),
+    "id" TEXT NOT NULL,
+    "barcode" VARCHAR(255),
     "name" VARCHAR(255) NOT NULL,
     "category" VARCHAR(100) NOT NULL DEFAULT 'general',
     "stock_quantity" INTEGER NOT NULL DEFAULT 0,
@@ -38,10 +30,7 @@ CREATE TABLE "products" (
     CONSTRAINT "products_pkey" PRIMARY KEY ("id")
 );
 
--- Make the sequence owned by the id column (good practice, optional but recommended)
-ALTER SEQUENCE product_seq OWNED BY "products"."id";
-
--- CreateTable sales
+-- CreateTable
 CREATE TABLE "sales" (
     "id" SERIAL NOT NULL,
     "product_id" TEXT NOT NULL,
@@ -54,16 +43,23 @@ CREATE TABLE "sales" (
     CONSTRAINT "sales_pkey" PRIMARY KEY ("id")
 );
 
--- Indexes
+-- CreateIndex
 CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
 
+-- CreateIndex
+CREATE UNIQUE INDEX "products_barcode_key" ON "products"("barcode");
+
+-- CreateIndex
 CREATE INDEX "products_id_idx" ON "products"("id");
+
+-- CreateIndex
 CREATE INDEX "products_name_idx" ON "products"("name");
 
+-- CreateIndex
 CREATE INDEX "sales_product_id_idx" ON "sales"("product_id");
+
+-- CreateIndex
 CREATE INDEX "sales_created_at_idx" ON "sales"("created_at");
 
--- Foreign Key
-ALTER TABLE "sales" ADD CONSTRAINT "sales_product_id_fkey"
-    FOREIGN KEY ("product_id") REFERENCES "products"("id")
-    ON DELETE CASCADE ON UPDATE CASCADE;
+-- AddForeignKey
+ALTER TABLE "sales" ADD CONSTRAINT "sales_product_id_fkey" FOREIGN KEY ("product_id") REFERENCES "products"("id") ON DELETE CASCADE ON UPDATE CASCADE;

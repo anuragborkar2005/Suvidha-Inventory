@@ -1,6 +1,21 @@
 services:
+    app:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        ports:
+            - "3000:3000"
+        environment:
+            DATABASE_URL: postgresql://postgres:cu29hj8an5@db:5432/postgres?schema=public
+            SECRET_KEY: ${SECRET_KEY}
+        depends_on:
+            - db
+        volumes:
+            - .:/app
+            - /app/node_modules
+
     db:
-        image: postgres
+        image: postgres:15
         restart: always
         shm_size: 128mb
         volumes:
@@ -9,11 +24,14 @@ services:
               tmpfs:
                   size: 128mb
         environment:
-            POSTGRES_PASSWORD: "cu29hj8an5"
+            POSTGRES_USER: postgres
+            POSTGRES_PASSWORD: cu29hj8an5
+            POSTGRES_DB: postgres
         ports:
-            - 5432:5432
+            - "5432:5432"
+
     adminer:
         image: adminer
         restart: always
         ports:
-            - 8080:8080
+            - "8080:8080"

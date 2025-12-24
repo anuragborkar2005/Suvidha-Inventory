@@ -28,6 +28,7 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { filterNavByRole } from "@/lib/nav-utils";
 
 type ProfileType = {
     name: string;
@@ -62,95 +63,96 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             });
     }, []);
 
-    const data = useMemo(
-        () => ({
-            user: {
-                name: profile.name || "Guest",
-                email: profile.email || "guest@example.com",
-                avatar: "https://avatar.iran.liara.run/public/boy",
-                role: profile.role || "guest",
-            },
-            navMain: [
+    const navMain = [
+        {
+            title: "Dashboard",
+            url: "/dashboard",
+            icon: LayoutDashboard,
+            isActive: true,
+            items: [
+                { title: "Overview", url: "/dashboard/overview" },
+                { title: "Reports", url: "/dashboard/reports" },
+                { title: "Analytics", url: "/dashboard/analytics" },
+            ],
+            roles: ["superadmin"],
+        },
+        {
+            title: "Products",
+            url: "/products",
+            icon: Boxes,
+            items: [
+                { title: "All Products", url: "/products/all" },
+                { title: "Add Product", url: "/products/add-products" },
                 {
-                    title: "Dashboard",
-                    url: "/dashboard",
-                    icon: LayoutDashboard,
-                    isActive: true,
-                    items: [
-                        { title: "Overview", url: "/dashboard/overview" },
-                        { title: "Reports", url: "/dashboard/reports" },
-                        { title: "Analytics", url: "/dashboard/analytics" },
-                    ],
-                    roles: ["superadmin"],
-                },
-                {
-                    title: "Products",
-                    url: "/products",
-                    icon: Boxes,
-                    items: [
-                        { title: "All Products", url: "/products/all" },
-                        { title: "Add Product", url: "/products/add-products" },
-                        {
-                            title: "Stock Levels",
-                            url: "/products/stock-levels",
-                        },
-                    ],
-                    roles: ["admin", "manager"],
-                },
-                {
-                    title: "Sales",
-                    url: "#",
-                    icon: ShoppingCart,
-                    items: [
-                        { title: "New Sale", url: "#" },
-                        { title: "Sales History", url: "#" },
-                        { title: "Invoices", url: "#" },
-                    ],
-                    roles: ["admin", "manager", "cashier"],
-                },
-                {
-                    title: "Suppliers",
-                    url: "#",
-                    icon: Truck,
-                    items: [
-                        { title: "All Suppliers", url: "#" },
-                        { title: "Purchase Orders", url: "#" },
-                    ],
-                    roles: ["admin", "manager"],
-                },
-                {
-                    title: "Settings",
-                    url: "#",
-                    icon: Settings2,
-                    items: [
-                        { title: "General", url: "#" },
-                        { title: "Users & Roles", url: "#" },
-                    ],
-                    roles: ["admin"],
+                    title: "Stock Levels",
+                    url: "/products/stock-levels",
                 },
             ],
-            navSecondary: [
-                {
-                    title: "Support",
-                    url: "#",
-                    icon: LifeBuoy,
-                    roles: ["admin", "manager", "cashier"],
-                },
-                {
-                    title: "Feedback",
-                    url: "#",
-                    icon: Send,
-                    roles: ["admin", "manager", "cashier"],
-                },
+            roles: ["superadmin", "admin", "manager"],
+        },
+        {
+            title: "Sales",
+            url: "#",
+            icon: ShoppingCart,
+            items: [
+                { title: "New Sale", url: "/sales/new-sale" },
+                { title: "Sales History", url: "/sales/history" },
+                { title: "Invoices", url: "/sales/invoice" },
             ],
-            projects: [
-                { name: "Semester Essentials", url: "#", icon: ClipboardList },
-                { name: "Exam Season", url: "#", icon: BookOpen },
-                { name: "Art & Design", url: "#", icon: Palette },
+            roles: ["superadmin", "admin", "manager", "cashier"],
+        },
+        {
+            title: "Suppliers",
+            url: "#",
+            icon: Truck,
+            items: [
+                { title: "All Suppliers", url: "#" },
+                { title: "Purchase Orders", url: "#" },
             ],
-        }),
-        [profile],
-    );
+            roles: ["superadmin", "admin", "manager"],
+        },
+        {
+            title: "Settings",
+            url: "#",
+            icon: Settings2,
+            items: [
+                { title: "General", url: "#" },
+                { title: "Users & Roles", url: "#" },
+            ],
+            roles: ["superadmin", "admin"],
+        },
+    ];
+
+    const navSecondary = [
+        {
+            title: "Support",
+            url: "#",
+            icon: LifeBuoy,
+            roles: ["superadmin", "admin", "manager", "cashier"],
+        },
+        {
+            title: "Feedback",
+            url: "#",
+            icon: Send,
+            roles: ["superadmin", "admin", "manager", "cashier"],
+        },
+    ];
+
+    const data = {
+        user: {
+            name: profile.name || "Guest",
+            email: profile.email || "guest@example.com",
+            avatar: "https://avatar.iran.liara.run/public/boy",
+            role: profile.role || "guest",
+        },
+        navMain: filterNavByRole(navMain, profile.role),
+        navSecondary: filterNavByRole(navSecondary, profile.role),
+        projects: [
+            { name: "Semester Essentials", url: "#", icon: ClipboardList },
+            { name: "Exam Season", url: "#", icon: BookOpen },
+            { name: "Art & Design", url: "#", icon: Palette },
+        ],
+    };
 
     return (
         <Sidebar {...props}>

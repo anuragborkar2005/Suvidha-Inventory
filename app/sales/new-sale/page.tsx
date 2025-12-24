@@ -39,7 +39,7 @@ import { toast } from "sonner";
 import { Product } from "@/types/product";
 
 export default function SalesPage() {
-    const [cart, setCart] = useState({});
+    const [cart, setCart] = useState<Product[]>([]);
     const [date, setDate] = useState<Date | undefined>(new Date());
     const [studentName, setStudentName] = useState("");
     const barcodeInputRef = useRef<HTMLInputElement>(null);
@@ -395,7 +395,7 @@ export default function SalesPage() {
                         </Card>
 
                         {/* Quick Info */}
-                        <Card className="bg-gradient-to-r from-indigo-50 to-purple-50 border-indigo-200">
+                        <Card className="bg-linear-to-r from-indigo-50 to-purple-50 border-indigo-200">
                             <CardHeader className="pb-3">
                                 <CardTitle className="text-base">
                                     Tips
