@@ -1,0 +1,59 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../prisma/generated/client"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  superadmin
+  admin
+  staff
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String   @db.VarChar(255)
+  email     String   @unique @db.VarChar(255)
+  password  String   @db.VarChar(255)
+  role      Role     @default(staff)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("users")
+}
+
+model Product {
+  id             String   @id @default(cuid())
+  barcode        String?  @unique @db.VarChar(255)
+  name           String   @db.VarChar(255)
+  category       String   @default("general") @db.VarChar(100)
+  stockQuantity  Int      @default(0) @map("stock_quantity")
+  stockThreshold Int      @default(30) @map("stock_threshold")
+  costPrice      Decimal  @map("cost_price") @db.Decimal(10, 2)
+  sellingPrice   Decimal  @map("selling_price") @db.Decimal(10, 2)
+  sales          Sale[]
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  @@index([id])
+  @@index([name])
+  @@map("products")
+}
+
+model Sale {
+  id         Int      @id @default(autoincrement())
+  productId  String   @map("product_id")
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  quantity   Int
+  totalPrice Decimal  @map("total_price") @db.Decimal(10, 2)
+  totalCost  Decimal  @map("total_cost") @db.Decimal(10, 2)
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@index([productId])
+  @@index([createdAt])
+  @@map("sales")
+}
