@@ -1,4 +1,10 @@
 "use client";
+import SaleForm from "@/components/SaleForm"
+
+export default function Page() {
+  return <SaleForm />
+}
+
 
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";

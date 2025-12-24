@@ -7,3 +7,8 @@ export default function AddProductsPage() {
         </div>
     );
 }
+import AddProductForm from "@/components/AddProductForm"
+
+export default function Page() {
+  return <AddProductForm />
+}
