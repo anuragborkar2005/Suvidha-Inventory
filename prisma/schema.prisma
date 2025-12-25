@@ -48,6 +48,9 @@ model Sale {
   id         Int      @id @default(autoincrement())
   productId  String   @map("product_id")
   product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  invoiceId  String?
+  invoice    Invoice? @relation(fields: [invoiceId], references: [id])
+  
   quantity   Int
   totalPrice Decimal  @map("total_price") @db.Decimal(10, 2)
   totalCost  Decimal  @map("total_cost") @db.Decimal(10, 2)
@@ -57,4 +60,16 @@ model Sale {
   @@index([productId])
   @@index([createdAt])
   @@map("sales")
+}
+
+model Invoice {
+  id         String   @id @default(cuid())
+  student    String
+  date       DateTime @default(now())
+  total      Decimal  @db.Decimal(10,2)
+
+  sales      Sale[]   // link to Sale items
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 }
