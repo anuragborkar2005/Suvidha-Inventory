@@ -9,7 +9,7 @@ import {
 import { createSession, deleteSession } from "@/lib/session";
 import { redirect } from "next/navigation";
 import prisma from "@/lib/prisma";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 
 export async function signup(
     state: SignUpFormState,

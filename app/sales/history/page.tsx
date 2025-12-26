@@ -21,9 +21,10 @@ export default async function SalesHistory() {
               <p>{inv.date.toDateString()}</p>
             </div>
 
-            <Link href={`/sales/invoice/${inv.id}`} className="text-blue-600 underline">
-              View Invoice
-            </Link>
+           <Link href={`/sales/invoice/${inv.id}`} className="text-blue-500 underline">
+  View Invoice
+</Link>
+
           </div>
         ))}
       </div>

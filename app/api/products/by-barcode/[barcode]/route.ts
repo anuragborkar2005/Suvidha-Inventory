@@ -1,10 +1,13 @@
-import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { NextResponse } from "next/server";
 
-export async function GET(_: any, { params }: { params: { barcode: string } }) {
+export async function GET(
+  _req: Request,
+  { params }: { params: { code: string } }
+) {
   const product = await prisma.product.findUnique({
-    where: { barcode: params.barcode }
+    where: { barcode: params.code }
   });
 
-  return NextResponse.json(product);
+  return NextResponse.json(product ?? null);
 }
