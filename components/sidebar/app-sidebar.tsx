@@ -14,9 +14,8 @@ import {
     ShoppingCart,
     Truck,
 } from "lucide-react";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { NavMain } from "@/components/sidebar/nav-main";
-import { NavProjects } from "@/components/sidebar/nav-products";
 import { NavSecondary } from "@/components/sidebar/nav-secondary";
 import { NavUser } from "@/components/sidebar/nav-user";
 import {
@@ -29,6 +28,7 @@ import {
     SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { filterNavByRole } from "@/lib/nav-utils";
+import { usePathname } from "next/navigation";
 
 type ProfileType = {
     name: string;
@@ -42,6 +42,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         email: "guest@example.com",
         role: "guest",
     });
+    const pathname = usePathname();
 
     useEffect(() => {
         fetch("/api/auth/profile")
@@ -51,7 +52,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             })
             .then((data) => {
                 const p = data.data ?? data;
-                console.log(p);
                 setProfile({
                     name: p.name || "Guest",
                     email: p.email || "guest@example.com",
@@ -68,7 +68,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             title: "Dashboard",
             url: "/dashboard",
             icon: LayoutDashboard,
-            isActive: true,
+            isActive: pathname.startsWith("/dashboard"),
             items: [
                 { title: "Overview", url: "/dashboard/overview" },
                 { title: "Reports", url: "/dashboard/reports" },
@@ -80,6 +80,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             title: "Products",
             url: "/products",
             icon: Boxes,
+            isActive: pathname.startsWith("/products"),
             items: [
                 { title: "All Products", url: "/products/all" },
                 { title: "Add Product", url: "/products/add-products" },
@@ -92,12 +93,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         },
         {
             title: "Sales",
-            url: "#",
+            url: "/sales",
             icon: ShoppingCart,
+            isActive: pathname.startsWith("/sales"),
             items: [
-                { title: "New Sale", url: "/sales/new-sale" },
+                { title: "New Sale", url: "/sales/new" },
                 { title: "Sales History", url: "/sales/history" },
-                { title: "Invoices", url: "/sales/invoice" },
             ],
             roles: ["superadmin", "admin", "manager", "cashier"],
         },
@@ -113,11 +114,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         },
         {
             title: "Settings",
-            url: "#",
+            url: "/settings/general",
             icon: Settings2,
+            isActive: pathname.startsWith("/settings"),
             items: [
-                { title: "General", url: "#" },
-                { title: "Users & Roles", url: "#" },
+                { title: "General", url: "/settings/general" },
+                { title: "Users & Roles", url: "/settings/users" },
             ],
             roles: ["superadmin", "admin"],
         },
@@ -147,11 +149,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         },
         navMain: filterNavByRole(navMain, profile.role),
         navSecondary: filterNavByRole(navSecondary, profile.role),
-        projects: [
-            { name: "Semester Essentials", url: "#", icon: ClipboardList },
-            { name: "Exam Season", url: "#", icon: BookOpen },
-            { name: "Art & Design", url: "#", icon: Palette },
-        ],
     };
 
     return (
@@ -160,7 +157,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild>
-                            <a href="#">
+                            <a href="/dashboard">
                                 <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
                                     <Command className="size-4" />
                                 </div>
@@ -169,7 +166,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                                         Suvidha
                                     </span>
                                     <span className="truncate text-xs">
-                                        Inventory Management
+                                        Inventory
                                     </span>
                                 </div>
                             </a>
@@ -179,7 +176,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             </SidebarHeader>
             <SidebarContent className="scrollbar-hide">
                 <NavMain items={data.navMain} />
-                <NavProjects projects={data.projects} />
                 <NavSecondary items={data.navSecondary} className="mt-auto" />
             </SidebarContent>
             <SidebarFooter>
