@@ -1,7 +1,6 @@
 "use client";
 
 import { ChevronRight, type LucideIcon } from "lucide-react";
-
 import {
     Collapsible,
     CollapsibleContent,
@@ -43,15 +42,18 @@ export function NavMain({
                         asChild
                         defaultOpen={item.isActive}
                     >
-                        <SidebarMenuItem>
-                            <SidebarMenuButton tooltip={item.title}>
+                        <SidebarMenuItem className="relative">
+                            <SidebarMenuButton
+                                tooltip={item.title}
+                                className="data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground"
+                            >
                                 <item.icon />
                                 <span>{item.title}</span>
                             </SidebarMenuButton>
                             {item.items?.length ? (
                                 <>
                                     <CollapsibleTrigger asChild>
-                                        <SidebarMenuAction className="data-[state=open]:rotate-90">
+                                        <SidebarMenuAction className="absolute right-2 data-[state=open]:rotate-90">
                                             <ChevronRight />
                                             <span className="sr-only">
                                                 Toggle
@@ -66,6 +68,7 @@ export function NavMain({
                                                 >
                                                     <SidebarMenuSubButton
                                                         asChild
+                                                        className="data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground"
                                                     >
                                                         <a href={subItem.url}>
                                                             <span>

@@ -1,4 +1,4 @@
-import { Prisma } from "@/prisma/generated/client/client";
+import { Prisma } from "@prisma/client";
 import { Product } from "./product";
 
 export interface Sale {

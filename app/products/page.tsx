@@ -1,3 +1,5 @@
+import { redirect } from "next/navigation";
+
 export default function ProductsPage() {
-    return <div></div>;
+    redirect("/products/all");
 }

@@ -15,28 +15,12 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal } from "lucide-react";
+import prisma from "@/lib/prisma";
 
-const users = [
-    {
-        name: "John Doe",
-        email: "john.doe@example.com",
-        role: "superadmin",
-    },
-    {
-        name: "Jane Smith",
-        email: "jane.smith@example.com",
-        role: "admin",
-    },
-    {
-        name: "Peter Jones",
-        email: "peter.jones@example.com",
-        role: "staff",
-    },
-];
-
-export default function UsersTable() {
+export default async function UsersTable() {
+    const users = await prisma.user.findMany();
     return (
-        <div className="border rounded-md">
+        <div className="border rounded-md ">
             <Table>
                 <TableHeader>
                     <TableRow>
@@ -65,12 +49,18 @@ export default function UsersTable() {
                                             variant="ghost"
                                         >
                                             <MoreHorizontal className="h-4 w-4" />
-                                            <span className="sr-only">Toggle menu</span>
+                                            <span className="sr-only">
+                                                Toggle menu
+                                            </span>
                                         </Button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end">
-                                        <DropdownMenuItem>Edit</DropdownMenuItem>
-                                        <DropdownMenuItem>Delete</DropdownMenuItem>
+                                        <DropdownMenuItem>
+                                            Edit
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem>
+                                            Delete
+                                        </DropdownMenuItem>
                                     </DropdownMenuContent>
                                 </DropdownMenu>
                             </TableCell>

@@ -1,10 +1,10 @@
-'use client'
+"use client";
 
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
-import { z } from "zod"
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
 import {
     Form,
     FormControl,
@@ -13,9 +13,9 @@ import {
     FormItem,
     FormLabel,
     FormMessage,
-} from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
-import { toast } from "sonner"
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
 
 const settingsFormSchema = z.object({
     storeName: z.string().min(2, {
@@ -27,36 +27,41 @@ const settingsFormSchema = z.object({
     currency: z.string().min(1, {
         message: "Currency is required.",
     }),
-})
+});
 
-type SettingsFormValues = z.infer<typeof settingsFormSchema>
+type SettingsFormValues = z.infer<typeof settingsFormSchema>;
 
 // This can be used to get the default values from the server
 const defaultValues: Partial<SettingsFormValues> = {
     storeName: "",
     address: "",
     currency: "INR",
-}
+};
 
 export default function SettingsForm() {
     const form = useForm<SettingsFormValues>({
         resolver: zodResolver(settingsFormSchema),
         defaultValues,
-    })
+    });
 
     function onSubmit(data: SettingsFormValues) {
         toast("You submitted the following values:", {
             description: (
                 <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-                    <code className="text-white">{JSON.stringify(data, null, 2)}</code>
+                    <code className="text-white">
+                        {JSON.stringify(data, null, 2)}
+                    </code>
                 </pre>
             ),
-        })
+        });
     }
 
     return (
         <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+            <form
+                onSubmit={form.handleSubmit(onSubmit)}
+                className="space-y-8 px-8 py-4"
+            >
                 <FormField
                     control={form.control}
                     name="storeName"
@@ -64,7 +69,10 @@ export default function SettingsForm() {
                         <FormItem>
                             <FormLabel>Store Name</FormLabel>
                             <FormControl>
-                                <Input placeholder="Your store name" {...field} />
+                                <Input
+                                    placeholder="Your store name"
+                                    {...field}
+                                />
                             </FormControl>
                             <FormDescription>
                                 This is the name of your store.
@@ -80,7 +88,10 @@ export default function SettingsForm() {
                         <FormItem>
                             <FormLabel>Address</FormLabel>
                             <FormControl>
-                                <Input placeholder="Your store address" {...field} />
+                                <Input
+                                    placeholder="Your store address"
+                                    {...field}
+                                />
                             </FormControl>
                             <FormDescription>
                                 This is the address of your store.
@@ -108,5 +119,5 @@ export default function SettingsForm() {
                 <Button type="submit">Update settings</Button>
             </form>
         </Form>
-    )
+    );
 }

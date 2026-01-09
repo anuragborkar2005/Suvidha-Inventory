@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { z } from "zod";
@@ -9,19 +9,18 @@ const UpdateUserSchema = z.object({
     role: z.enum(["staff", "admin", "superadmin"]),
 });
 
-type RouteParams = { params: Promise<{ id: string }> };
+type Context = {
+    params: Promise<{ id: string }>;
+};
 
-export async function GET(
-    req: Request,
-    { params }: { params: { id: string } }
-) {
+export async function GET(req: NextRequest, { params }: Context) {
     try {
         const { user } = await auth();
         if (!user || (user.role !== "superadmin" && user.role !== "admin")) {
             return new NextResponse("Unauthorized", { status: 401 });
         }
 
-        const { id } = params;
+        const { id } = await params;
         const targetUser = await prisma.user.findUnique({
             where: { id },
             select: {
@@ -44,17 +43,14 @@ export async function GET(
     }
 }
 
-export async function PUT(
-    req: Request,
-    { params }: { params: { id: string } }
-) {
+export async function PUT(req: NextRequest, { params }: Context) {
     try {
         const { user } = await auth();
         if (!user || user.role !== "superadmin") {
             return new NextResponse("Unauthorized", { status: 401 });
         }
 
-        const { id } = params;
+        const { id } = await params;
         const body = await req.json();
 
         const validation = UpdateUserSchema.safeParse(body);
@@ -84,17 +80,15 @@ export async function PUT(
         return new NextResponse("Internal Server Error", { status: 500 });
     }
 }
-export async function DELETE(
-    req: Request,
-    { params }: { params: { id: string } }
-) {
+
+export async function DELETE(req: NextRequest, { params }: Context) {
     try {
         const { user } = await auth();
         if (!user || user.role !== "superadmin") {
             return new NextResponse("Unauthorized", { status: 401 });
         }
 
-        const { id } = params;
+        const { id } = await params;
         await prisma.user.delete({
             where: { id },
         });

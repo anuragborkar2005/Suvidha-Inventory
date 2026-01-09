@@ -1,44 +1,134 @@
-"use server";
+"use client";
 
-import { prisma } from "@/lib/prisma";
+import { use, useEffect, useState } from "react";
 import Link from "next/link";
+import "./print.css";
+import { Button } from "@/components/ui/button";
+import { PageTitle } from "@/components/app/page-title";
 
-export default async function InvoicePage({ params }: { params: { id: string } }) {
+interface Invoice {
+    id: string;
+    student: string;
+    date: string;
+    total: number;
+    sales: {
+        id: number;
+        product: {
+            name: string;
+        };
+        quantity: number;
+        totalPrice: number;
+    }[];
+}
 
-  if (!params?.id) {
-    return <div style={{padding:30}}>❌ Invalid Invoice ID</div>
-  }
+export default function InvoicePage({
+    params,
+}: {
+    params: Promise<{ id: string }>;
+}) {
+    const [invoice, setInvoice] = useState<Invoice | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
-  const invoice = await prisma.invoice.findUnique({
-    where: { id: params.id },
-    include: { sales: { include: { product: true } } }
-  });
+    const { id } = use(params);
 
-  if (!invoice) {
-    return <div style={{padding:30}}>❌ Invoice Not Found</div>
-  }
+    useEffect(() => {
+        if (id) {
+            fetch(`/api/sales/invoice/${id}`)
+                .then((res) => {
+                    if (!res.ok) {
+                        throw new Error("Failed to fetch invoice");
+                    }
+                    return res.json();
+                })
+                .then((data) => {
+                    setInvoice(data);
+                })
+                .catch((err) => {
+                    setError(err.message);
+                })
+                .finally(() => {
+                    setLoading(false);
+                });
+        }
+    }, [id]);
 
-  return (
-    <div style={{padding:30}}>
-      <h1 style={{fontSize:26, fontWeight:"bold"}}>Invoice #{invoice.id.slice(0,6)}</h1>
+    useEffect(() => {
+        if (!loading && invoice) {
+            window.print();
+        }
+    }, [loading, invoice]);
 
-      <p><b>Student:</b> {invoice.student}</p>
-      <p><b>Date:</b> {invoice.date.toDateString()}</p>
+    if (loading) {
+        return <div className="p-4">Loading...</div>;
+    }
 
-      <h3 style={{marginTop:20,fontSize:20}}>Items:</h3>
-      <ul>
-        {invoice.sales.map(s => (
-          <li key={s.id}>
-            {s.product?.name} × {s.quantity} = ₹{s.totalPrice.toString()}
-          </li>
-        ))}
-      </ul>
+    if (error) {
+        return <div className="p-4">Error: {error}</div>;
+    }
 
-      <h2 style={{marginTop:20,fontSize:22}}>Total: ₹{invoice.total.toString()}</h2>
+    if (!invoice) {
+        return <div className="p-4">Invoice not found.</div>;
+    }
 
-      <Link href="/sales/history" style={{marginTop:20,display:"inline-block",color:"blue"}}>
-        ← Back to Sales History
-      </Link>
-    </div>
-  )
+    return (
+        <div className="p-4">
+            <div className="flex justify-between items-center mb-4">
+                <PageTitle>Invoice #${invoice.id.slice(0, 6)}</PageTitle>
+                <Button onClick={() => window.print()} className="no-print">
+                    Print
+                </Button>
+            </div>
+
+            <div className="bg-white p-6 rounded-lg shadow-md">
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <p className="font-bold">Student:</p>
+                        <p>{invoice.student}</p>
+                    </div>
+                    <div>
+                        <p className="font-bold">Date:</p>
+                        <p>{new Date(invoice.date).toLocaleDateString()}</p>
+                    </div>
+                </div>
+
+                <h3 className="text-xl font-bold mb-2">Items:</h3>
+                <table className="w-full mb-4">
+                    <thead>
+                        <tr className="border-b">
+                            <th className="text-left py-2">Product</th>
+                            <th className="text-center py-2">Quantity</th>
+                            <th className="text-right py-2">Price</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {invoice.sales.map((s) => (
+                            <tr key={s.id} className="border-b">
+                                <td className="py-2">{s.product.name}</td>
+                                <td className="text-center py-2">
+                                    {s.quantity}
+                                </td>
+                                <td className="text-right py-2">
+                                    ₹{Number(s.totalPrice).toFixed(2)}
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+
+                <div className="text-right">
+                    <h2 className="text-2xl font-bold">
+                        Total: ₹{Number(invoice.total).toFixed(2)}
+                    </h2>
+                </div>
+            </div>
+
+            <Link
+                href="/sales/history"
+                className="mt-4 inline-block text-blue-500 no-print"
+            >
+                ← Back to Sales History
+            </Link>
+        </div>
+    );
 }

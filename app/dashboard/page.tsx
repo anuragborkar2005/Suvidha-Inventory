@@ -1,5 +1,5 @@
 "use server";
-import { prisma } from "@/lib/prisma";
+import prisma from "@/lib/prisma";
 
 export default async function Dashboard() {
   const totalProducts = await prisma.product.count();

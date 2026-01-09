@@ -1,10 +1,17 @@
 import type { Metadata } from "next";
-import localFont from "next/font/local";
+import { Inter, Merriweather, Fira_Code } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 
-const dmSans = localFont({
-    src: "./font/DM_Sans.ttf",
+const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
+const merriweather = Merriweather({
+    subsets: ["latin"],
+    weight: ["400", "700"],
+    variable: "--font-serif",
+});
+const firaCode = Fira_Code({
+    subsets: ["latin"],
+    variable: "--font-mono",
 });
 
 export const metadata: Metadata = {
@@ -19,7 +26,9 @@ export default function RootLayout({
 }>) {
     return (
         <html lang="en">
-            <body className={`${dmSans.className} antialiased`}>
+            <body
+                className={`${inter.variable} ${merriweather.variable} ${firaCode.variable} font-sans antialiased`}
+            >
                 {children}
                 <Toaster richColors position="top-right" />
             </body>

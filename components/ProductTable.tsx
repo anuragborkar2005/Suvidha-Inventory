@@ -14,8 +14,8 @@ export default function ProductTable({ products }: { products: Product[] }) {
         {products.map(p => (
           <tr key={p.id}>
             <td>{p.name}</td>
-            <td>{p.quantity}</td>
-            <td>₹{p.price}</td>
+            <td>{p.stockQuantity}</td>
+            <td>₹{p.sellingPrice.toString()}</td>
           </tr>
         ))}
       </tbody>

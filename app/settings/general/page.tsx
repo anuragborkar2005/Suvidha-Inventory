@@ -3,8 +3,8 @@ import SettingsForm from "@/components/settings/settings-form";
 
 export default function GeneralSettingsPage() {
     return (
-        <div className="p-4">
-            <PageTitle title="General Settings" />
+        <div className="px-8 py-4">
+            <PageTitle>General Settings</PageTitle>
             <SettingsForm />
         </div>
     );

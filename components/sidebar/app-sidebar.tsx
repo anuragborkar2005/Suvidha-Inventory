@@ -66,7 +66,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     const navMain = [
         {
             title: "Dashboard",
-            url: "/dashboard",
+            url: "#",
             icon: LayoutDashboard,
             isActive: pathname.startsWith("/dashboard"),
             items: [
@@ -78,7 +78,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         },
         {
             title: "Products",
-            url: "/products",
+            url: "#",
             icon: Boxes,
             isActive: pathname.startsWith("/products"),
             items: [
@@ -89,18 +89,18 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     url: "/products/stock-levels",
                 },
             ],
-            roles: ["superadmin", "admin", "manager"],
+            roles: ["superadmin", "admin"],
         },
         {
             title: "Sales",
-            url: "/sales",
+            url: "#",
             icon: ShoppingCart,
             isActive: pathname.startsWith("/sales"),
             items: [
                 { title: "New Sale", url: "/sales/new" },
                 { title: "Sales History", url: "/sales/history" },
             ],
-            roles: ["superadmin", "admin", "manager", "cashier"],
+            roles: ["superadmin", "admin", "staff"],
         },
         {
             title: "Suppliers",
@@ -110,7 +110,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 { title: "All Suppliers", url: "#" },
                 { title: "Purchase Orders", url: "#" },
             ],
-            roles: ["superadmin", "admin", "manager"],
+            roles: ["superadmin", "admin"],
         },
         {
             title: "Settings",
