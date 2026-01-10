@@ -21,6 +21,17 @@ export default function UsersPage() {
     role: "staff",
   });
 
+  useEffect(() => {
+  fetch("/api/user")
+    .then((res) => {
+      if (res.status === 403) {
+        alert("Access denied: Only Super Admin can manage users.");
+        window.location.href = "/";
+      }
+    });
+}, []);
+
+
   async function loadUsers() {
     try {
       const res = await fetch("/api/user");
