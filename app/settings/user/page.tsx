@@ -1,18 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { hasPermission } from "@/lib/rbac";
+import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+
+type User = {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+};
 
 export default function UsersPage() {
-  const [users, setUsers] = useState<any[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({
     name: "",
@@ -21,60 +21,55 @@ export default function UsersPage() {
     role: "staff",
   });
 
-  const [sessionRole, setSessionRole] = useState("staff");
-
   async function loadUsers() {
-    const res = await fetch("/api/user");
-    const data = await res.json();
-    setUsers(data);
-  }
-
-  async function loadSession() {
-    const res = await fetch("/api/auth/session");
-    const data = await res.json();
-    setSessionRole(data?.user?.role ?? "staff");
+    try {
+      const res = await fetch("/api/user");
+      const data = await res.json();
+      setUsers(data);
+    } catch (error) {
+      console.error("Failed to load users", error);
+    }
   }
 
   useEffect(() => {
     loadUsers();
-    loadSession();
   }, []);
 
-  useEffect(() => {
-    if (!hasPermission(sessionRole as any, "manageUsers")) {
-      window.location.href = "/";
-    }
-  }, [sessionRole]);
-
   async function createUser() {
-    await fetch("/api/user", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
-    });
+    try {
+      await fetch("/api/user", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
 
-    setOpen(false);
-    setForm({ name: "", email: "", password: "", role: "staff" });
-    loadUsers();
+      setOpen(false);
+      setForm({ name: "", email: "", password: "", role: "staff" });
+      loadUsers();
+    } catch (error) {
+      console.error("Failed to create user", error);
+    }
   }
 
   async function changeRole(userId: string, role: string) {
-    await fetch(`/api/user/${userId}/role`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ role }),
-    });
+    try {
+      await fetch(`/api/user/${userId}/role`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ role }),
+      });
 
-    loadUsers();
+      loadUsers();
+    } catch (error) {
+      console.error("Failed to update role", error);
+    }
   }
 
   return (
     <div className="p-6 space-y-4">
       <h1 className="text-xl font-semibold">User Management</h1>
 
-      {hasPermission(sessionRole as any, "manageUsers") && (
-        <Button onClick={() => setOpen(true)}>➕ Add User</Button>
-      )}
+      <Button onClick={() => setOpen(true)}>➕ Add User</Button>
 
       <div className="border rounded-md">
         {users.map((u) => (
@@ -90,32 +85,26 @@ export default function UsersPage() {
             <div className="flex gap-2 items-center">
               <span className="text-sm">Role:</span>
 
-              {hasPermission(sessionRole as any, "manageUsers") ? (
-                <select
-                  value={u.role}
-                  onChange={(e) => changeRole(u.id, e.target.value)}
-                  className="border rounded px-2 py-1"
-                >
-                  <option value="staff">staff</option>
-                  <option value="admin">admin</option>
-                  <option value="superadmin">superadmin</option>
-                </select>
-              ) : (
-                <span className="font-semibold">{u.role}</span>
-              )}
+              <select
+                value={u.role}
+                onChange={(e) => changeRole(u.id, e.target.value)}
+                className="border rounded px-2 py-1"
+              >
+                <option value="staff">staff</option>
+                <option value="admin">admin</option>
+                <option value="superadmin">superadmin</option>
+              </select>
             </div>
           </div>
         ))}
       </div>
 
-      {/* Add User Modal */}
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Add New User</DialogTitle>
-          </DialogHeader>
+      {/* Simple Modal */}
+      {open && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-md p-6 w-[400px] space-y-4">
+            <h2 className="text-lg font-semibold">Add New User</h2>
 
-          <div className="grid gap-3">
             <Input
               placeholder="Name"
               value={form.name}
@@ -123,6 +112,7 @@ export default function UsersPage() {
                 setForm({ ...form, name: e.target.value })
               }
             />
+
             <Input
               placeholder="Email"
               value={form.email}
@@ -130,6 +120,7 @@ export default function UsersPage() {
                 setForm({ ...form, email: e.target.value })
               }
             />
+
             <Input
               type="password"
               placeholder="Password"
@@ -144,17 +135,22 @@ export default function UsersPage() {
               onChange={(e) =>
                 setForm({ ...form, role: e.target.value })
               }
-              className="border rounded px-2 py-1"
+              className="border rounded px-2 py-1 w-full"
             >
               <option value="staff">staff</option>
               <option value="admin">admin</option>
               <option value="superadmin">superadmin</option>
             </select>
 
-            <Button onClick={createUser}>Create User</Button>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={createUser}>Create</Button>
+            </div>
           </div>
-        </DialogContent>
-      </Dialog>
+        </div>
+      )}
     </div>
   );
 }

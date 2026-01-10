@@ -1,11 +1,36 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { auth } from "@/lib/auth";
 import bcrypt from "bcrypt";
+import { getSession } from "@/lib/session";
 
+/**
+ * GET → Fetch all users (SUPERADMIN ONLY)
+ */
 export async function GET() {
   try {
+    const session = await getSession();
+
+    if (!session?.userId) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
+    const currentUser = await prisma.user.findUnique({
+      where: { id: session.userId },
+      select: { role: true },
+    });
+
+    if (currentUser?.role !== "superadmin") {
+      return NextResponse.json(
+        { error: "Access denied" },
+        { status: 403 }
+      );
+    }
+
     const users = await prisma.user.findMany({
+      orderBy: { createdAt: "desc" },
       select: {
         id: true,
         name: true,
@@ -13,12 +38,11 @@ export async function GET() {
         role: true,
         createdAt: true,
       },
-      orderBy: { createdAt: "desc" },
     });
 
     return NextResponse.json(users);
   } catch (error) {
-    console.error("Fetch users error:", error);
+    console.error("GET /api/user error:", error);
     return NextResponse.json(
       { error: "Failed to fetch users" },
       { status: 500 }
@@ -26,17 +50,28 @@ export async function GET() {
   }
 }
 
+/**
+ * POST → Create new user (SUPERADMIN ONLY)
+ */
 export async function POST(req: Request) {
   try {
-    const session = await auth();
+    const session = await getSession();
 
-    if (!session?.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!session?.userId) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
     }
 
-    if (session.user.role !== "superadmin") {
+    const currentUser = await prisma.user.findUnique({
+      where: { id: session.userId },
+      select: { role: true },
+    });
+
+    if (currentUser?.role !== "superadmin") {
       return NextResponse.json(
-        { error: "Only superadmin can create users" },
+        { error: "Access denied" },
         { status: 403 }
       );
     }
@@ -44,21 +79,10 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { name, email, password, role } = body;
 
-    if (!name || !email || !password || !role) {
+    if (!name || !email || !password) {
       return NextResponse.json(
-        { error: "All fields are required" },
+        { error: "Missing required fields" },
         { status: 400 }
-      );
-    }
-
-    const existingUser = await prisma.user.findUnique({
-      where: { email },
-    });
-
-    if (existingUser) {
-      return NextResponse.json(
-        { error: "Email already exists" },
-        { status: 409 }
       );
     }
 
@@ -69,13 +93,13 @@ export async function POST(req: Request) {
         name,
         email,
         password: hashedPassword,
-        role,
+        role: role || "staff",
       },
     });
 
     return NextResponse.json(user);
   } catch (error) {
-    console.error("Create user error:", error);
+    console.error("POST /api/user error:", error);
     return NextResponse.json(
       { error: "Failed to create user" },
       { status: 500 }

@@ -1,22 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import { hasPermission } from "@/lib/rbac";
 
-export default function AppSidebar() {
-  const [role, setRole] = useState("staff");
+type Role = "staff" | "admin" | "superadmin";
 
-  async function loadSession() {
-    const res = await fetch("/api/auth/session");
-    const data = await res.json();
-    setRole(data?.user?.role ?? "staff");
-  }
-
-  useEffect(() => {
-    loadSession();
-  }, []);
-
+export default function AppSidebar({ role }: { role: Role }) {
   return (
     <aside className="w-64 border-r min-h-screen p-4 space-y-3">
       <Link href="/" className="block font-medium">
@@ -27,7 +16,7 @@ export default function AppSidebar() {
         Products
       </Link>
 
-      {hasPermission(role as any, "manageUsers") && (
+      {hasPermission(role, "manageUsers") && (
         <Link href="/settings/user" className="block">
           Users
         </Link>

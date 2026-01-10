@@ -17,10 +17,10 @@ import type * as Prisma from "./prismaNamespace"
 
 const config: runtime.GetPrismaClientConfig = {
   "previewFeatures": [],
-  "clientVersion": "7.0.0",
-  "engineVersion": "0c19ccc313cf9911a90d99d2ac2eb0280c76c513",
+  "clientVersion": "7.2.0",
+  "engineVersion": "0c8ef2ce45c83248ab3df073180d5eda9e8be7a3",
   "activeProvider": "postgresql",
-  "inlineSchema": "generator client {\n  provider = \"prisma-client\"\n  output   = \"../prisma/generated/client\"\n}\n\ndatasource db {\n  provider = \"postgresql\"\n}\n\nenum Role {\n  superadmin\n  admin\n  staff\n}\n\nmodel User {\n  id        String   @id @default(cuid())\n  name      String   @db.VarChar(255)\n  email     String   @unique @db.VarChar(255)\n  password  String   @db.VarChar(255)\n  role      Role     @default(staff)\n  createdAt DateTime @default(now()) @map(\"created_at\")\n  updatedAt DateTime @updatedAt @map(\"updated_at\")\n\n  @@map(\"users\")\n}\n\nmodel Product {\n  id             String   @id @db.Text\n  name           String   @db.VarChar(255)\n  category       String   @default(\"general\") @db.VarChar(100)\n  stockQuantity  Int      @default(0) @map(\"stock_quantity\")\n  stockThreshold Int      @default(30) @map(\"stock_threshold\")\n  costPrice      Decimal  @map(\"cost_price\") @db.Decimal(10, 2)\n  sellingPrice   Decimal  @map(\"selling_price\") @db.Decimal(10, 2)\n  sales          Sale[]\n  createdAt      DateTime @default(now()) @map(\"created_at\")\n  updatedAt      DateTime @updatedAt @map(\"updated_at\")\n\n  @@index([id])\n  @@index([name])\n  @@map(\"products\")\n}\n\nmodel Sale {\n  id         Int      @id @default(autoincrement())\n  productId  String   @map(\"product_id\")\n  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)\n  quantity   Int\n  totalPrice Decimal  @map(\"total_price\") @db.Decimal(10, 2)\n  totalCost  Decimal  @map(\"total_cost\") @db.Decimal(10, 2)\n  createdAt  DateTime @default(now()) @map(\"created_at\")\n  updatedAt  DateTime @updatedAt @map(\"updated_at\")\n\n  @@index([productId])\n  @@index([createdAt])\n  @@map(\"sales\")\n}\n",
+  "inlineSchema": "generator client {\n  provider = \"prisma-client\"\n  output   = \"../prisma/generated/client\"\n}\n\ndatasource db {\n  provider = \"postgresql\"\n}\n\nenum Role {\n  superadmin\n  admin\n  staff\n}\n\nmodel User {\n  id        String   @id @default(cuid())\n  name      String   @db.VarChar(255)\n  email     String   @unique @db.VarChar(255)\n  password  String   @db.VarChar(255)\n  role      Role     @default(staff)\n  createdAt DateTime @default(now()) @map(\"created_at\")\n  updatedAt DateTime @updatedAt @map(\"updated_at\")\n\n  @@map(\"users\")\n}\n\nmodel Product {\n  id             String   @id @default(cuid())\n  barcode        String?  @unique @db.VarChar(255)\n  name           String   @db.VarChar(255)\n  category       String   @default(\"general\") @db.VarChar(100)\n  stockQuantity  Int      @default(0) @map(\"stock_quantity\")\n  stockThreshold Int      @default(30) @map(\"stock_threshold\")\n  costPrice      Decimal  @map(\"cost_price\") @db.Decimal(10, 2)\n  sellingPrice   Decimal  @map(\"selling_price\") @db.Decimal(10, 2)\n  sales          Sale[]\n  createdAt      DateTime @default(now()) @map(\"created_at\")\n  updatedAt      DateTime @updatedAt @map(\"updated_at\")\n\n  @@index([id])\n  @@index([name])\n  @@map(\"products\")\n}\n\nmodel Sale {\n  id         Int      @id @default(autoincrement())\n  productId  String   @map(\"product_id\")\n  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)\n  quantity   Int\n  totalPrice Decimal  @map(\"total_price\") @db.Decimal(10, 2)\n  totalCost  Decimal  @map(\"total_cost\") @db.Decimal(10, 2)\n  createdAt  DateTime @default(now()) @map(\"created_at\")\n  updatedAt  DateTime @updatedAt @map(\"updated_at\")\n\n  @@index([productId])\n  @@index([createdAt])\n  @@map(\"sales\")\n}\n",
   "runtimeDataModel": {
     "models": {},
     "enums": {},
@@ -28,7 +28,7 @@ const config: runtime.GetPrismaClientConfig = {
   }
 }
 
-config.runtimeDataModel = JSON.parse("{\"models\":{\"User\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"name\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"email\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"password\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"role\",\"kind\":\"enum\",\"type\":\"Role\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\",\"dbName\":\"created_at\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\",\"dbName\":\"updated_at\"}],\"dbName\":\"users\"},\"Product\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"name\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"category\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"stockQuantity\",\"kind\":\"scalar\",\"type\":\"Int\",\"dbName\":\"stock_quantity\"},{\"name\":\"stockThreshold\",\"kind\":\"scalar\",\"type\":\"Int\",\"dbName\":\"stock_threshold\"},{\"name\":\"costPrice\",\"kind\":\"scalar\",\"type\":\"Decimal\",\"dbName\":\"cost_price\"},{\"name\":\"sellingPrice\",\"kind\":\"scalar\",\"type\":\"Decimal\",\"dbName\":\"selling_price\"},{\"name\":\"sales\",\"kind\":\"object\",\"type\":\"Sale\",\"relationName\":\"ProductToSale\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\",\"dbName\":\"created_at\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\",\"dbName\":\"updated_at\"}],\"dbName\":\"products\"},\"Sale\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"productId\",\"kind\":\"scalar\",\"type\":\"String\",\"dbName\":\"product_id\"},{\"name\":\"product\",\"kind\":\"object\",\"type\":\"Product\",\"relationName\":\"ProductToSale\"},{\"name\":\"quantity\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"totalPrice\",\"kind\":\"scalar\",\"type\":\"Decimal\",\"dbName\":\"total_price\"},{\"name\":\"totalCost\",\"kind\":\"scalar\",\"type\":\"Decimal\",\"dbName\":\"total_cost\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\",\"dbName\":\"created_at\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\",\"dbName\":\"updated_at\"}],\"dbName\":\"sales\"}},\"enums\":{},\"types\":{}}")
+config.runtimeDataModel = JSON.parse("{\"models\":{\"User\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"name\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"email\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"password\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"role\",\"kind\":\"enum\",\"type\":\"Role\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\",\"dbName\":\"created_at\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\",\"dbName\":\"updated_at\"}],\"dbName\":\"users\"},\"Product\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"barcode\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"name\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"category\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"stockQuantity\",\"kind\":\"scalar\",\"type\":\"Int\",\"dbName\":\"stock_quantity\"},{\"name\":\"stockThreshold\",\"kind\":\"scalar\",\"type\":\"Int\",\"dbName\":\"stock_threshold\"},{\"name\":\"costPrice\",\"kind\":\"scalar\",\"type\":\"Decimal\",\"dbName\":\"cost_price\"},{\"name\":\"sellingPrice\",\"kind\":\"scalar\",\"type\":\"Decimal\",\"dbName\":\"selling_price\"},{\"name\":\"sales\",\"kind\":\"object\",\"type\":\"Sale\",\"relationName\":\"ProductToSale\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\",\"dbName\":\"created_at\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\",\"dbName\":\"updated_at\"}],\"dbName\":\"products\"},\"Sale\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"productId\",\"kind\":\"scalar\",\"type\":\"String\",\"dbName\":\"product_id\"},{\"name\":\"product\",\"kind\":\"object\",\"type\":\"Product\",\"relationName\":\"ProductToSale\"},{\"name\":\"quantity\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"totalPrice\",\"kind\":\"scalar\",\"type\":\"Decimal\",\"dbName\":\"total_price\"},{\"name\":\"totalCost\",\"kind\":\"scalar\",\"type\":\"Decimal\",\"dbName\":\"total_cost\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\",\"dbName\":\"created_at\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\",\"dbName\":\"updated_at\"}],\"dbName\":\"sales\"}},\"enums\":{},\"types\":{}}")
 
 async function decodeBase64AsWasm(wasmBase64: string): Promise<WebAssembly.Module> {
   const { Buffer } = await import('node:buffer')
@@ -62,7 +62,7 @@ export interface PrismaClientConstructor {
    * const users = await prisma.user.findMany()
    * ```
    * 
-   * Read more in our [docs](https://www.prisma.io/docs/reference/tools-and-interfaces/prisma-client).
+   * Read more in our [docs](https://pris.ly/d/client).
    */
 
   new <
@@ -84,7 +84,7 @@ export interface PrismaClientConstructor {
  * const users = await prisma.user.findMany()
  * ```
  * 
- * Read more in our [docs](https://www.prisma.io/docs/reference/tools-and-interfaces/prisma-client).
+ * Read more in our [docs](https://pris.ly/d/client).
  */
 
 export interface PrismaClient<
@@ -113,7 +113,7 @@ export interface PrismaClient<
    * const result = await prisma.$executeRaw`UPDATE User SET cool = ${true} WHERE email = ${'user@email.com'};`
    * ```
    *
-   * Read more in our [docs](https://www.prisma.io/docs/reference/tools-and-interfaces/prisma-client/raw-database-access).
+   * Read more in our [docs](https://pris.ly/d/raw-queries).
    */
   $executeRaw<T = unknown>(query: TemplateStringsArray | Prisma.Sql, ...values: any[]): Prisma.PrismaPromise<number>;
 
@@ -125,7 +125,7 @@ export interface PrismaClient<
    * const result = await prisma.$executeRawUnsafe('UPDATE User SET cool = $1 WHERE email = $2 ;', true, 'user@email.com')
    * ```
    *
-   * Read more in our [docs](https://www.prisma.io/docs/reference/tools-and-interfaces/prisma-client/raw-database-access).
+   * Read more in our [docs](https://pris.ly/d/raw-queries).
    */
   $executeRawUnsafe<T = unknown>(query: string, ...values: any[]): Prisma.PrismaPromise<number>;
 
@@ -136,7 +136,7 @@ export interface PrismaClient<
    * const result = await prisma.$queryRaw`SELECT * FROM User WHERE id = ${1} OR email = ${'user@email.com'};`
    * ```
    *
-   * Read more in our [docs](https://www.prisma.io/docs/reference/tools-and-interfaces/prisma-client/raw-database-access).
+   * Read more in our [docs](https://pris.ly/d/raw-queries).
    */
   $queryRaw<T = unknown>(query: TemplateStringsArray | Prisma.Sql, ...values: any[]): Prisma.PrismaPromise<T>;
 
@@ -148,7 +148,7 @@ export interface PrismaClient<
    * const result = await prisma.$queryRawUnsafe('SELECT * FROM User WHERE id = $1 OR email = $2;', 1, 'user@email.com')
    * ```
    *
-   * Read more in our [docs](https://www.prisma.io/docs/reference/tools-and-interfaces/prisma-client/raw-database-access).
+   * Read more in our [docs](https://pris.ly/d/raw-queries).
    */
   $queryRawUnsafe<T = unknown>(query: string, ...values: any[]): Prisma.PrismaPromise<T>;
 
