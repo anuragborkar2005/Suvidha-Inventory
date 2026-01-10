@@ -1,29 +1,71 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Trash2, Plus, Barcode } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
-type CartItem = {
-  id: string;
+type Item = {
+  id: string;          // cart row id
+  productId: string;  // real DB product id
   name: string;
   price: number;
   qty: number;
 };
 
-export default function NewSalePage() {
-  const [items, setItems] = useState<CartItem[]>([]);
+export default function SalesPage() {
+  const [items, setItems] = useState<Item[]>([]);
+  const [query, setQuery] = useState("");
+  const [suggestions, setSuggestions] = useState<any[]>([]);
   const barcodeInputRef = useRef<HTMLInputElement>(null);
-  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     barcodeInputRef.current?.focus();
   }, []);
 
-  // ✅ Scan barcode and add product
-  const handleBarcodeScan = async (e: React.KeyboardEvent) => {
+  // ===============================
+  // 🔍 PRODUCT AUTOCOMPLETE SEARCH
+  // ===============================
+  async function loadSuggestions(text: string) {
+    setQuery(text);
+
+    if (!text) {
+      setSuggestions([]);
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/products/search?q=${text}`);
+      const data = await res.json();
+      setSuggestions(data);
+    } catch (err) {
+      console.error("Search failed", err);
+    }
+  }
+
+  function selectProduct(product: any) {
+    setItems((prev) => [
+      ...prev,
+      {
+        id: crypto.randomUUID(),
+        productId: product.id,     // ✅ store DB id
+        name: product.name,
+        price: Number(product.sellingPrice),
+        qty: 1,
+      },
+    ]);
+
+    setQuery("");
+    setSuggestions([]);
+  }
+
+  // ===============================
+  // 📦 BARCODE SCAN AUTO ADD
+  // ===============================
+  async function handleBarcodeScan(
+    e: React.KeyboardEvent<HTMLInputElement>,
+  ) {
     if (e.key !== "Enter") return;
 
     const barcode = (e.target as HTMLInputElement).value.trim();
@@ -33,168 +75,135 @@ export default function NewSalePage() {
       const res = await fetch(`/api/products/by-barcode/${barcode}`);
       const product = await res.json();
 
-      if (!res.ok || !product) {
+      if (!product?.id) {
         toast.error("Product not found");
         return;
       }
 
-      setItems((prev) => {
-        const existing = prev.find((i) => i.id === product.id);
-
-        if (existing) {
-          return prev.map((i) =>
-            i.id === product.id
-              ? { ...i, qty: i.qty + 1 }
-              : i,
-          );
-        }
-
-        return [
-          ...prev,
-          {
-            id: product.id,
-            name: product.name,
-            price: Number(product.sellingPrice),
-            qty: 1,
-          },
-        ];
-      });
+      setItems((prev) => [
+        ...prev,
+        {
+          id: crypto.randomUUID(),
+          productId: product.id,   // ✅ store DB id
+          name: product.name,
+          price: Number(product.sellingPrice),
+          qty: 1,
+        },
+      ]);
 
       toast.success(`${product.name} added`);
       (e.target as HTMLInputElement).value = "";
-    } catch {
-      toast.error("Scan failed");
+    } catch (error) {
+      toast.error("Barcode lookup failed");
     }
-  };
+  }
 
-  // ✅ Add empty manual item
-  const addItem = () => {
-    setItems((prev) => [
-      ...prev,
-      {
-        id: crypto.randomUUID(),
-        name: "",
-        price: 0,
-        qty: 1,
-      },
-    ]);
-  };
-
-  // ✅ Update item
-  const updateItem = (
-    id: string,
-    field: keyof CartItem,
-    value: any,
-  ) => {
+  // ===============================
+  // 🧮 ITEM OPERATIONS
+  // ===============================
+  function updateQty(id: string, qty: number) {
     setItems((prev) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, [field]: value } : item,
-      ),
+      prev.map((i) => (i.id === id ? { ...i, qty } : i)),
     );
-  };
+  }
 
-  // ✅ Remove item
-  const removeItem = (id: string) => {
-    setItems((prev) => prev.filter((item) => item.id !== id));
-  };
+  function removeItem(id: string) {
+    setItems((prev) => prev.filter((i) => i.id !== id));
+  }
 
-  // ✅ Calculate totals
-  const subtotal = items.reduce(
+  const total = items.reduce(
     (sum, item) => sum + item.price * item.qty,
     0,
   );
-  const gst = subtotal * 0.18;
-  const total = subtotal + gst;
 
-  // ✅ Save sale and reduce stock
-  const saveSale = async () => {
+  // ===============================
+  // ✅ COMPLETE SALE
+  // ===============================
+  async function completeSale() {
     if (items.length === 0) {
-      toast.error("Cart is empty");
+      toast.error("No items in cart");
       return;
     }
 
     try {
-      setLoading(true);
+      const res = await fetch("/api/sales/complete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ items }),
+      });
 
-      for (const item of items) {
-        await fetch("/api/sales", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            productId: item.id,
-            quantity: item.qty,
-          }),
-        });
+      if (!res.ok) {
+        throw new Error("Sale failed");
       }
 
-      toast.success("Sale completed successfully");
-      setItems([]);
-    } catch {
-      toast.error("Sale failed");
-    } finally {
-      setLoading(false);
-    }
-  };
+      toast.success("Sale completed successfully ✅");
 
+      // ✅ Clear cart
+      setItems([]);
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to complete sale");
+    }
+  }
+
+  // ===============================
+  // 🖥 UI
+  // ===============================
   return (
-    <div className="p-6 space-y-6 max-w-5xl mx-auto">
-      <h1 className="text-2xl font-bold">New Sale</h1>
+    <div className="p-6 space-y-6 max-w-3xl">
+
+      <h1 className="text-xl font-semibold">🧾 New Sale</h1>
 
       {/* Barcode Input */}
-      <div className="flex gap-3">
+      <Input
+        ref={barcodeInputRef}
+        placeholder="Scan barcode and press Enter..."
+        onKeyDown={handleBarcodeScan}
+      />
+
+      {/* Product Search */}
+      <div className="relative">
         <Input
-          ref={barcodeInputRef}
-          placeholder="Scan barcode and press Enter"
-          onKeyDown={handleBarcodeScan}
+          placeholder="Type product name..."
+          value={query}
+          onChange={(e) => loadSuggestions(e.target.value)}
         />
-        <Button variant="outline">
-          <Barcode className="w-4 h-4 mr-2" />
-          Scan
-        </Button>
+
+        {suggestions.length > 0 && (
+          <div className="absolute z-50 bg-white border rounded shadow w-full mt-1">
+            {suggestions.map((p) => (
+              <div
+                key={p.id}
+                onClick={() => selectProduct(p)}
+                className="px-3 py-2 cursor-pointer hover:bg-gray-100 text-sm flex justify-between"
+              >
+                <span>{p.name}</span>
+                <span className="text-gray-500">
+                  ₹{p.sellingPrice}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
-      {/* Add Item */}
-      <Button onClick={addItem} size="sm">
-        <Plus className="w-4 h-4 mr-2" />
-        Add Item
-      </Button>
-
-      {/* Items Table */}
-      <div className="border rounded-md overflow-hidden">
+      {/* Cart Table */}
+      <div className="border rounded">
         <table className="w-full text-sm">
-          <thead className="bg-gray-100">
+          <thead className="bg-gray-50">
             <tr>
               <th className="p-2 text-left">Product</th>
               <th className="p-2 text-center">Qty</th>
               <th className="p-2 text-right">Price</th>
-              <th className="p-2 text-right">Amount</th>
-              <th className="p-2"></th>
+              <th className="p-2 text-right">Total</th>
+              <th></th>
             </tr>
           </thead>
 
           <tbody>
-            {items.length === 0 && (
-              <tr>
-                <td
-                  colSpan={5}
-                  className="text-center p-6 text-gray-500"
-                >
-                  No items added
-                </td>
-              </tr>
-            )}
-
             {items.map((item) => (
               <tr key={item.id} className="border-t">
-                <td className="p-2">
-                  <Input
-                    value={item.name}
-                    placeholder="Product name"
-                    onChange={(e) =>
-                      updateItem(item.id, "name", e.target.value)
-                    }
-                  />
-                </td>
+                <td className="p-2">{item.name}</td>
 
                 <td className="p-2 text-center">
                   <Input
@@ -202,78 +211,52 @@ export default function NewSalePage() {
                     min={1}
                     value={item.qty}
                     onChange={(e) =>
-                      updateItem(
-                        item.id,
-                        "qty",
-                        Number(e.target.value),
-                      )
+                      updateQty(item.id, Number(e.target.value))
                     }
-                    className="w-20 mx-auto text-center"
+                    className="w-16 text-center"
                   />
                 </td>
 
                 <td className="p-2 text-right">
-                  <Input
-                    type="number"
-                    min={0}
-                    value={item.price}
-                    onChange={(e) =>
-                      updateItem(
-                        item.id,
-                        "price",
-                        Number(e.target.value),
-                      )
-                    }
-                    className="w-28 text-right"
-                  />
+                  ₹{item.price}
                 </td>
 
                 <td className="p-2 text-right font-medium">
-                  ₹{(item.price * item.qty).toFixed(0)}
+                  ₹{item.price * item.qty}
                 </td>
 
-                <td className="p-2 text-center">
+                <td className="p-2">
                   <Button
-                    variant="ghost"
                     size="icon"
+                    variant="ghost"
                     onClick={() => removeItem(item.id)}
                   >
-                    <Trash2 className="w-4 h-4 text-red-600" />
+                    <Trash2 size={16} />
                   </Button>
                 </td>
               </tr>
             ))}
+
+            {items.length === 0 && (
+              <tr>
+                <td colSpan={5} className="p-4 text-center text-gray-500">
+                  No products added yet
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
 
-      {/* Summary */}
-      <div className="flex justify-end">
-        <div className="w-80 space-y-2">
-          <div className="flex justify-between">
-            <span>Subtotal</span>
-            <span>₹{subtotal.toFixed(0)}</span>
-          </div>
-          <div className="flex justify-between">
-            <span>GST (18%)</span>
-            <span>₹{gst.toFixed(0)}</span>
-          </div>
-          <div className="flex justify-between font-bold text-lg">
-            <span>Total</span>
-            <span>₹{total.toFixed(0)}</span>
-          </div>
-        </div>
+      {/* Total */}
+      <div className="flex justify-between font-semibold text-lg">
+        <span>Total</span>
+        <span>₹ {total}</span>
       </div>
 
-      {/* Actions */}
-      <div className="flex justify-end gap-3">
-        <Button
-          onClick={saveSale}
-          disabled={loading}
-        >
-          {loading ? "Processing..." : "Save Sale"}
-        </Button>
-      </div>
+      <Button size="lg" onClick={completeSale}>
+        Complete Sale
+      </Button>
     </div>
   );
 }
