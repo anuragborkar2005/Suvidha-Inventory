@@ -2,32 +2,58 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { hasPermission } from "@/lib/rbac";
+
+type Role = "superadmin" | "admin" | "staff";
 
 export default function AppSidebar() {
-  const [role, setRole] = useState<string | null>(null);
+  const [role, setRole] = useState<Role>("staff");
+  const [loading, setLoading] = useState(true);
 
   async function loadProfile() {
     try {
-      const res = await fetch("/api/auth/profile"); // ✅ FIXED PATH
-      if (!res.ok) return;
+      const res = await fetch("/api/profile", {
+        cache: "no-store",
+      });
 
-      const data = await res.json();
-      console.log("👤 PROFILE DATA:", data);
-
-      if (data?.success) {
-        setRole(data.data.role);
-      } else {
-        setRole(null);
+      if (!res.ok) {
+        console.error("Profile API failed:", res.status);
+        return;
       }
-    } catch (error) {
-      console.error("Profile load failed", error);
-      setRole(null);
+
+      const text = await res.text();
+
+      // 🚨 Prevent HTML parsing crash
+      if (text.startsWith("<")) {
+        console.error("Profile API returned HTML instead of JSON");
+        return;
+      }
+
+      const data = JSON.parse(text);
+
+      console.log("👤 Loaded profile:", data);
+
+      if (data?.success && data?.data?.role) {
+        setRole(data.data.role);
+      }
+    } catch (err) {
+      console.error("Failed to load profile", err);
+    } finally {
+      setLoading(false);
     }
   }
 
   useEffect(() => {
     loadProfile();
   }, []);
+
+  if (loading) {
+    return (
+      <aside className="w-64 border-r min-h-screen p-4 text-gray-500">
+        Loading...
+      </aside>
+    );
+  }
 
   return (
     <aside className="w-64 border-r min-h-screen p-4 space-y-3">
@@ -43,9 +69,16 @@ export default function AppSidebar() {
         Sales
       </Link>
 
-      {/* ✅ ONLY SUPERADMIN CAN SEE USERS */}
-      {role === "superadmin" && (
-        <Link href="/settings/user" className="block font-semibold">
+      <Link href="/sales/history" className="block">
+        Sales History
+      </Link>
+
+      {/* ✅ SUPERADMIN ONLY */}
+      {hasPermission(role, "manageUsers") && (
+        <Link
+          href="/settings/user"
+          className="block font-semibold text-blue-600"
+        >
           Users
         </Link>
       )}

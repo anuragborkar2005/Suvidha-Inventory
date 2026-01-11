@@ -3,28 +3,41 @@ import { NextResponse } from "next/server";
 
 export async function GET() {
   try {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
 
-    const sales = await prisma.sale.aggregate({
-      _sum: {
-        totalAmount: true,
-      },
+    const end = new Date();
+    end.setHours(23, 59, 59, 999);
+
+    const sales = await prisma.sale.findMany({
       where: {
         createdAt: {
-          gte: today,
+          gte: start,
+          lte: end,
         },
       },
     });
 
+    const totalRevenue = sales.reduce(
+      (sum, sale) => sum + Number(sale.totalPrice),
+      0
+    );
+
+    const totalQuantity = sales.reduce(
+      (sum, sale) => sum + sale.quantity,
+      0
+    );
+
     return NextResponse.json({
-      total: sales._sum.totalAmount ?? 0,
+      totalRevenue,
+      totalQuantity,
+      totalOrders: sales.length,
     });
   } catch (error) {
-    console.error("SALES API ERROR:", error);
+    console.error("❌ TODAY SALES API ERROR:", error);
     return NextResponse.json(
-      { total: 0 },
-      { status: 200 } // still return valid JSON
+      { error: "Failed to load today sales" },
+      { status: 500 }
     );
   }
 }
