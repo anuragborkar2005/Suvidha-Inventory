@@ -4,7 +4,6 @@ import { getSession } from "@/lib/session";
 
 /**
  * PATCH → Update user role (SUPERADMIN ONLY)
- * Uses EMAIL instead of ID to avoid undefined params issues
  */
 export async function PATCH(req: Request) {
   try {
@@ -40,7 +39,7 @@ export async function PATCH(req: Request) {
       );
     }
 
-    // ✅ Update using EMAIL (unique)
+    // ✅ Update user using UNIQUE email
     const updatedUser = await prisma.user.update({
       where: { email },
       data: { role },
