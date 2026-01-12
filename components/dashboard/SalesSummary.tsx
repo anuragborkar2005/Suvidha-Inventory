@@ -45,10 +45,10 @@ export default function SalesSummary() {
   useEffect(() => {
     loadSales();
 
-    // 🔁 Refresh every 5 seconds
+    
     const refreshInterval = setInterval(loadSales, 5000);
 
-    // 🕛 Detect date change
+    
     let today = new Date().toDateString();
 
     const dayWatcher = setInterval(() => {
@@ -58,7 +58,7 @@ export default function SalesSummary() {
         today = now;
         loadSales();
       }
-    }, 60_000); // every minute
+    }, 60_000); 
 
     return () => {
       clearInterval(refreshInterval);
@@ -95,9 +95,7 @@ export default function SalesSummary() {
   );
 }
 
-/* -------------------- */
-/* Small reusable card  */
-/* -------------------- */
+
 function StatCard({
   label,
   value,

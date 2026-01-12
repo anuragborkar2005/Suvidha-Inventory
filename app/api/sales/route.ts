@@ -1,51 +1,66 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 
-export async function POST(req: Request) {
+
+export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { productId, quantity } = body;
+    const { items } = body;
 
-    const product = await prisma.product.findUnique({
-      where: { id: productId },
-    });
-
-    if (!product) {
-      return NextResponse.json({ error: "Product not found" }, { status: 404 });
-    }
-
-    if (quantity > product.stockQuantity) {
+    if (!items || !Array.isArray(items) || items.length === 0) {
       return NextResponse.json(
-        { error: "Not enough stock" },
+        { error: "No sale items provided" },
         { status: 400 }
       );
     }
 
-    const total = Number(product.sellingPrice) * Number(quantity);
+    await prisma.$transaction(async (tx) => {
+      for (const item of items) {
+        const product = await tx.product.findUnique({
+          where: { id: item.productId },
+        });
 
-    // Transaction ensures consistency
-    await prisma.$transaction([
-      prisma.sale.create({
-        data: {
-          productId,
-          quantity: Number(quantity),
-          total,
-        },
-      }),
+        if (!product) {
+          throw new Error("Product not found");
+        }
 
-      prisma.product.update({
-        where: { id: productId },
-        data: {
-          stockQuantity: product.stockQuantity - Number(quantity),
-        },
-      }),
-    ]);
+        if (product.stockQuantity < item.quantity) {
+          throw new Error(`Not enough stock for ${product.name}`);
+        }
+
+        const totalPrice =
+          Number(product.sellingPrice) * Number(item.quantity);
+
+        const totalCost =
+          Number(product.costPrice) * Number(item.quantity);
+
+        
+        await tx.sale.create({
+          data: {
+            productId: product.id,
+            quantity: Number(item.quantity),
+            totalPrice,
+            totalCost,
+          },
+        });
+
+        
+        await tx.product.update({
+          where: { id: product.id },
+          data: {
+            stockQuantity: {
+              decrement: Number(item.quantity),
+            },
+          },
+        });
+      }
+    });
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("SALE ERROR:", error);
+    console.error("❌ SALE FAILED:", error);
     return NextResponse.json(
-      { error: "Failed to create sale" },
+      { error: "Sale failed" },
       { status: 500 }
     );
   }

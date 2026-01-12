@@ -1,9 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 
-/**
- * POST → Create product
- */
+
 export async function POST(req: Request) {
   try {
     const body = await req.json();
@@ -34,9 +32,7 @@ export async function POST(req: Request) {
   }
 }
 
-/**
- * GET → Fetch all products
- */
+
 export async function GET() {
   const products = await prisma.product.findMany({
     orderBy: { createdAt: "desc" },

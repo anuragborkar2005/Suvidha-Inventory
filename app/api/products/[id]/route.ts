@@ -1,53 +1,69 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 
-/**
- * PUT → Update product by ID
- */
+
 export async function PUT(
-  req: Request,
-  context: { params?: { id?: string } }
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // ✅ SAFELY EXTRACT ID
-    let productId = context?.params?.id;
+    const { id } = await params;   // ✅ Important fix
+    const body = await request.json();
 
-    // Fallback: extract ID from URL if params fail
-    if (!productId) {
-      const url = new URL(req.url);
-      productId = url.pathname.split("/").pop();
-    }
+    console.log("✏️ UPDATE PRODUCT:", id, body);
 
-    if (!productId) {
+    if (!id) {
       return NextResponse.json(
-        { error: "Product ID missing in request" },
+        { error: "Product ID missing" },
         { status: 400 }
       );
     }
 
-    const body = await req.json();
-
-    console.log("✏️ UPDATE PRODUCT:", productId, body);
-
     const updated = await prisma.product.update({
-      where: { id: productId },
+      where: { id },
       data: {
         name: body.name,
         category: body.category,
         stockQuantity: Number(body.stockQuantity),
-        stockThreshold: Number(body.stockThreshold),
-        costPrice: Number(body.costPrice),
-        sellingPrice: Number(body.sellingPrice),
+        costPrice: body.costPrice,
+        sellingPrice: body.sellingPrice,
       },
     });
-
-    console.log("✅ PRODUCT UPDATED:", updated);
 
     return NextResponse.json(updated);
   } catch (error) {
     console.error("❌ UPDATE PRODUCT FAILED:", error);
     return NextResponse.json(
       { error: "Failed to update product" },
+      { status: 500 }
+    );
+  }
+}
+
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+
+    if (!id) {
+      return NextResponse.json(
+        { error: "Product ID missing" },
+        { status: 400 }
+      );
+    }
+
+    await prisma.product.delete({
+      where: { id },
+    });
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("❌ DELETE PRODUCT FAILED:", error);
+    return NextResponse.json(
+      { error: "Failed to delete product" },
       { status: 500 }
     );
   }

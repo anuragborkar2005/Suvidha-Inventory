@@ -25,7 +25,7 @@ export default function ProfileBadge() {
 
     const text = await res.text();
 
-    // ✅ Prevent HTML parse crash
+   
     if (text.startsWith("<")) {
       console.error("HTML received instead of JSON");
       return;

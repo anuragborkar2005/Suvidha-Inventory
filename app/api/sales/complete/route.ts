@@ -29,7 +29,7 @@ export async function POST(req: Request) {
         const totalCost =
           Number(product.costPrice) * Number(item.qty);
 
-        // ✅ Create Sale (matches schema)
+        
         await tx.sale.create({
           data: {
             productId: product.id,
@@ -39,7 +39,7 @@ export async function POST(req: Request) {
           },
         });
 
-        // ✅ Reduce Stock
+        
         await tx.product.update({
           where: { id: product.id },
           data: {
