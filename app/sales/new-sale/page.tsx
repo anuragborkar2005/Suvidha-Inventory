@@ -1,417 +1,262 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from "@/components/ui/table";
-import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
-} from "@/components/ui/popover";
-import {
-    Plus,
-    Trash2,
-    Calendar as CalendarIcon,
-    IndianRupee,
-    Barcode,
-} from "lucide-react";
-import { format } from "date-fns";
 import { useEffect, useRef, useState } from "react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import { Product } from "@/types/product";
+
+type Item = {
+  id: string;          // cart row id
+  productId: string;  // real DB product id
+  name: string;
+  price: number;
+  qty: number;
+};
 
 export default function SalesPage() {
-    const [cart, setCart] = useState<Product[]>([]);
-    const [date, setDate] = useState<Date | undefined>(new Date());
-    const [studentName, setStudentName] = useState("");
-    const barcodeInputRef = useRef<HTMLInputElement>(null);
+  const [items, setItems] = useState<Item[]>([]);
+  const [query, setQuery] = useState("");
+  const [suggestions, setSuggestions] = useState<any[]>([]);
+  const barcodeInputRef = useRef<HTMLInputElement>(null);
 
-    useEffect(() => {
-        barcodeInputRef?.current?.focus();
-    });
+  useEffect(() => {
+    barcodeInputRef.current?.focus();
+  }, []);
 
-    const handleBarcodeScan = async (e: React.KeyboardEvent) => {
-        if (e.key !== "Enter") return;
+  // ===============================
+  // 🔍 PRODUCT AUTOCOMPLETE SEARCH
+  // ===============================
+  async function loadSuggestions(text: string) {
+    setQuery(text);
 
-        const barcode = (e.target as HTMLInputElement).value.trim();
-        try {
-            const res = await fetch(`/api/products/by-barcode/${barcode}`);
-            const product = await res.json();
-            console.log(product);
-            if (!product) {
-                toast.error("Product not found!");
-                return;
-            }
+    if (!text) {
+      setSuggestions([]);
+      return;
+    }
 
-            toast.success(`${product.name} added`);
-            (e.target as HTMLInputElement).value = ""; // Clear for next scan
-        } catch (error: unknown) {
-            const msg =
-                error instanceof Error ? error.message : "Unknown Error";
-            toast.error(msg);
-        }
-    };
+    try {
+      const res = await fetch(`/api/products/search?q=${text}`);
+      const data = await res.json();
+      setSuggestions(data);
+    } catch (err) {
+      console.error("Search failed", err);
+    }
+  }
 
-    const [items, setItems] = useState<
-        { id: string; name: string; price: number; qty: number }[]
-    >([
-        {
-            id: "1",
-            name: "Monthly Tuition Fee - Class 10th",
-            price: 5000,
-            qty: 1,
-        },
-        { id: "2", name: "Science Practical Workbook", price: 650, qty: 1 },
+  function selectProduct(product: any) {
+    setItems((prev) => [
+      ...prev,
+      {
+        id: crypto.randomUUID(),
+        productId: product.id,     // ✅ store DB id
+        name: product.name,
+        price: Number(product.sellingPrice),
+        qty: 1,
+      },
     ]);
 
-    const addItem = () => {};
+    setQuery("");
+    setSuggestions([]);
+  }
 
-    const updateItem = () => {};
+  // ===============================
+  // 📦 BARCODE SCAN AUTO ADD
+  // ===============================
+  async function handleBarcodeScan(
+    e: React.KeyboardEvent<HTMLInputElement>,
+  ) {
+    if (e.key !== "Enter") return;
 
-    const removeItem = (id: string) => {};
+    const barcode = (e.target as HTMLInputElement).value.trim();
+    if (!barcode) return;
 
-    const subtotal = items.reduce(
-        (sum, item) => sum + item.price * item.qty,
-        0,
+    try {
+      const res = await fetch(`/api/products/by-barcode/${barcode}`);
+      const product = await res.json();
+
+      if (!product?.id) {
+        toast.error("Product not found");
+        return;
+      }
+
+      setItems((prev) => [
+        ...prev,
+        {
+          id: crypto.randomUUID(),
+          productId: product.id,   // ✅ store DB id
+          name: product.name,
+          price: Number(product.sellingPrice),
+          qty: 1,
+        },
+      ]);
+
+      toast.success(`${product.name} added`);
+      (e.target as HTMLInputElement).value = "";
+    } catch (error) {
+      toast.error("Barcode lookup failed");
+    }
+  }
+
+  // ===============================
+  // 🧮 ITEM OPERATIONS
+  // ===============================
+  function updateQty(id: string, qty: number) {
+    setItems((prev) =>
+      prev.map((i) => (i.id === id ? { ...i, qty } : i)),
     );
-    const gst = subtotal * 0.18;
-    const total = subtotal + gst;
+  }
 
-    return (
-        <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
-            <div className="max-w-7xl mx-auto">
-                {/* Page Header */}
-                <div className="mb-8">
-                    <h1 className="text-3xl font-bold text-gray-900">
-                        Create Invoice
-                    </h1>
-                    <p className="text-gray-600 mt-1">
-                        Generate professional fee receipts for students
-                    </p>
-                </div>
+  function removeItem(id: string) {
+    setItems((prev) => prev.filter((i) => i.id !== id));
+  }
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* Main Form */}
-                    <div className="lg:col-span-2 space-y-6">
-                        <Card className="border-none shadow-7xl rounded-xl">
-                            <CardHeader>
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <CardTitle>Invoice Details</CardTitle>
-                                        <CardDescription>
-                                            Fill in student and fee details
-                                        </CardDescription>
-                                    </div>
-                                    <Badge variant="secondary">Draft</Badge>
-                                </div>
-                            </CardHeader>
+  const total = items.reduce(
+    (sum, item) => sum + item.price * item.qty,
+    0,
+  );
 
-                            <CardContent className="space-y-8">
-                                {/* Student Name & Date */}
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="student-name">
-                                            Student Name
-                                        </Label>
-                                        <Input
-                                            id="student-name"
-                                            placeholder="e.g. Priya Singh"
-                                            value={studentName}
-                                            onChange={(e) =>
-                                                setStudentName(e.target.value)
-                                            }
-                                        />
-                                    </div>
+  // ===============================
+  // ✅ COMPLETE SALE
+  // ===============================
+  async function completeSale() {
+    if (items.length === 0) {
+      toast.error("No items in cart");
+      return;
+    }
 
-                                    <div className="space-y-2">
-                                        <Label>Invoice Date</Label>
-                                        <Popover>
-                                            <PopoverTrigger asChild>
-                                                <Button
-                                                    variant="outline"
-                                                    className="w-full justify-start text-left font-normal"
-                                                >
-                                                    <CalendarIcon className="mr-2 h-4 w-4" />
-                                                    {date
-                                                        ? format(date, "PPP")
-                                                        : "Pick a date"}
-                                                </Button>
-                                            </PopoverTrigger>
-                                            <PopoverContent
-                                                className="w-auto p-0"
-                                                align="start"
-                                            >
-                                                <Calendar
-                                                    mode="single"
-                                                    selected={date}
-                                                    onSelect={setDate}
-                                                />
-                                            </PopoverContent>
-                                        </Popover>
-                                    </div>
-                                </div>
+    try {
+      const res = await fetch("/api/sales/complete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ items }),
+      });
 
-                                <Separator />
+      if (!res.ok) {
+        throw new Error("Sale failed");
+      }
 
-                                {/* Items Table */}
-                                <div className="space-y-4">
-                                    <div className="flex items-center justify-between">
-                                        <h3 className="text-lg font-semibold">
-                                            Fee Items
-                                        </h3>
-                                        <div className="space-x-3">
-                                            <Button
-                                                variant="outline"
-                                                onClick={addItem}
-                                                size="sm"
-                                            >
-                                                <Barcode className="h-4 w-4 mr-2" />
-                                                Ready To Scan
-                                            </Button>
-                                            <Button onClick={addItem} size="sm">
-                                                <Plus className="h-4 w-4 mr-2" />
-                                                Add Item
-                                            </Button>
-                                        </div>
-                                    </div>
+      toast.success("Sale completed successfully ✅");
 
-                                    <Table>
-                                        <TableHeader>
-                                            <TableRow>
-                                                <TableHead className="w-full">
-                                                    Description
-                                                </TableHead>
-                                                <TableHead className="text-center">
-                                                    Qty
-                                                </TableHead>
-                                                <TableHead className="text-right">
-                                                    Unit Price
-                                                </TableHead>
-                                                <TableHead className="text-right">
-                                                    Amount
-                                                </TableHead>
-                                                <TableHead className="w-12"></TableHead>
-                                            </TableRow>
-                                        </TableHeader>
-                                        <TableBody>
-                                            {items.length === 0 ? (
-                                                <TableRow>
-                                                    <TableCell
-                                                        colSpan={5}
-                                                        className="text-center py-10 text-gray-500"
-                                                    >
-                                                        No items added. Click
-                                                        &quot;Add Item&quot; to
-                                                        begin.
-                                                    </TableCell>
-                                                </TableRow>
-                                            ) : (
-                                                items.map((item) => (
-                                                    <TableRow
-                                                        key={item.id}
-                                                        className="hover:bg-muted/50"
-                                                    >
-                                                        <TableCell>
-                                                            <Input
-                                                                placeholder="e.g. Monthly Tuition Fee"
-                                                                value={
-                                                                    item.name
-                                                                }
-                                                                onChange={(e) =>
-                                                                    updateItem()
-                                                                }
-                                                                className="border-0 focus-visible:ring-1 focus-visible:ring-ring h-9"
-                                                            />
-                                                        </TableCell>
-                                                        <TableCell className="text-center">
-                                                            <Input
-                                                                type="number"
-                                                                value={item.qty}
-                                                                onChange={(e) =>
-                                                                    updateItem()
-                                                                }
-                                                                className="w-20 mx-auto h-9 border-0 text-center"
-                                                                min="1"
-                                                            />
-                                                        </TableCell>
-                                                        <TableCell className="text-right">
-                                                            <Input
-                                                                type="number"
-                                                                value={
-                                                                    item.price
-                                                                }
-                                                                onChange={(e) =>
-                                                                    updateItem()
-                                                                }
-                                                                className="w-28 h-9 border-0 text-right"
-                                                                min="0"
-                                                            />
-                                                        </TableCell>
-                                                        <TableCell className="text-right font-medium">
-                                                            ₹
-                                                            {(
-                                                                item.price *
-                                                                item.qty
-                                                            ).toLocaleString(
-                                                                "en-IN",
-                                                            )}
-                                                        </TableCell>
-                                                        <TableCell>
-                                                            <Button
-                                                                variant="ghost"
-                                                                size="icon"
-                                                                onClick={() =>
-                                                                    removeItem(
-                                                                        item.id,
-                                                                    )
-                                                                }
-                                                                className="h-8 w-8 text-red-600 hover:bg-red-50"
-                                                            >
-                                                                <Trash2 className="h-4 w-4" />
-                                                            </Button>
-                                                        </TableCell>
-                                                    </TableRow>
-                                                ))
-                                            )}
-                                        </TableBody>
-                                    </Table>
-                                </div>
+      // ✅ Clear cart
+      setItems([]);
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to complete sale");
+    }
+  }
 
-                                {/* Action Buttons */}
-                                <div className="flex gap-3 pt-4">
-                                    <Button size="lg" className="flex-1">
-                                        Save & Send Invoice
-                                    </Button>
-                                    <Button size="lg" variant="outline">
-                                        Save Draft
-                                    </Button>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    </div>
+  // ===============================
+  // 🖥 UI
+  // ===============================
+  return (
+    <div className="p-6 space-y-6 max-w-3xl">
 
-                    {/* Summary Sidebar */}
-                    <div className="space-y-6">
-                        {/* Invoice Summary */}
-                        <Card className="sticky top-6">
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-2">
-                                    <IndianRupee className="h-5 w-5" />
-                                    Invoice Summary
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent className="space-y-6">
-                                {items.length > 0 && (
-                                    <>
-                                        <div className="space-y-3">
-                                            {items
-                                                .filter(
-                                                    (i) =>
-                                                        i.name.trim() &&
-                                                        i.price > 0,
-                                                )
-                                                .map((item) => (
-                                                    <div
-                                                        key={item.id}
-                                                        className="flex justify-between text-sm"
-                                                    >
-                                                        <span className="text-gray-600 max-w-[200px] truncate">
-                                                            {item.name}
-                                                            {item.qty > 1 &&
-                                                                ` × ${item.qty}`}
-                                                        </span>
-                                                        <span className="font-medium">
-                                                            ₹
-                                                            {(
-                                                                item.price *
-                                                                item.qty
-                                                            ).toLocaleString(
-                                                                "en-IN",
-                                                            )}
-                                                        </span>
-                                                    </div>
-                                                ))}
-                                        </div>
+      <h1 className="text-xl font-semibold">🧾 New Sale</h1>
 
-                                        <Separator />
+      {/* Barcode Input */}
+      <Input
+        ref={barcodeInputRef}
+        placeholder="Scan barcode and press Enter..."
+        onKeyDown={handleBarcodeScan}
+      />
 
-                                        <div className="space-y-3">
-                                            <div className="flex justify-between text-sm">
-                                                <span>Subtotal</span>
-                                                <span>
-                                                    ₹
-                                                    {subtotal.toLocaleString(
-                                                        "en-IN",
-                                                    )}
-                                                </span>
-                                            </div>
-                                            <div className="flex justify-between text-sm">
-                                                <span>GST (18%)</span>
-                                                <span>₹{gst.toFixed(0)}</span>
-                                            </div>
-                                            <div className="flex justify-between text-lg font-bold pt-3 border-t">
-                                                <span>Total</span>
-                                                <span className="text-xl">
-                                                    ₹{total.toFixed(0)}
-                                                </span>
-                                            </div>
-                                        </div>
+      {/* Product Search */}
+      <div className="relative">
+        <Input
+          placeholder="Type product name..."
+          value={query}
+          onChange={(e) => loadSuggestions(e.target.value)}
+        />
 
-                                        {/*<div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-                                            <p className="text-xs font-medium text-blue-900">
-                                                Amount in words
-                                            </p>
-                                            <p className="text-sm text-blue-800 mt-1 font-medium">
-                                                {numberToWords(total)} Only
-                                            </p>
-                                        </div>*/}
-                                    </>
-                                )}
+        {suggestions.length > 0 && (
+          <div className="absolute z-50 bg-white border rounded shadow w-full mt-1">
+            {suggestions.map((p) => (
+              <div
+                key={p.id}
+                onClick={() => selectProduct(p)}
+                className="px-3 py-2 cursor-pointer hover:bg-gray-100 text-sm flex justify-between"
+              >
+                <span>{p.name}</span>
+                <span className="text-gray-500">
+                  ₹{p.sellingPrice}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
 
-                                {items.length === 0 && (
-                                    <p className="text-center text-gray-500 py-8">
-                                        Add items to see summary
-                                    </p>
-                                )}
-                            </CardContent>
-                        </Card>
+      {/* Cart Table */}
+      <div className="border rounded">
+        <table className="w-full text-sm">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="p-2 text-left">Product</th>
+              <th className="p-2 text-center">Qty</th>
+              <th className="p-2 text-right">Price</th>
+              <th className="p-2 text-right">Total</th>
+              <th></th>
+            </tr>
+          </thead>
 
-                        {/* Quick Info */}
-                        <Card className="bg-linear-to-r from-indigo-50 to-purple-50 border-indigo-200">
-                            <CardHeader className="pb-3">
-                                <CardTitle className="text-base">
-                                    Tips
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <ul className="text-xs text-gray-700 space-y-2">
-                                    <li>• GST is auto-calculated at 18%</li>
-                                    <li>• Use clear fee descriptions</li>
-                                    <li>• Preview before sending</li>
-                                </ul>
-                            </CardContent>
-                        </Card>
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
+          <tbody>
+            {items.map((item) => (
+              <tr key={item.id} className="border-t">
+                <td className="p-2">{item.name}</td>
+
+                <td className="p-2 text-center">
+                  <Input
+                    type="number"
+                    min={1}
+                    value={item.qty}
+                    onChange={(e) =>
+                      updateQty(item.id, Number(e.target.value))
+                    }
+                    className="w-16 text-center"
+                  />
+                </td>
+
+                <td className="p-2 text-right">
+                  ₹{item.price}
+                </td>
+
+                <td className="p-2 text-right font-medium">
+                  ₹{item.price * item.qty}
+                </td>
+
+                <td className="p-2">
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={() => removeItem(item.id)}
+                  >
+                    <Trash2 size={16} />
+                  </Button>
+                </td>
+              </tr>
+            ))}
+
+            {items.length === 0 && (
+              <tr>
+                <td colSpan={5} className="p-4 text-center text-gray-500">
+                  No products added yet
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Total */}
+      <div className="flex justify-between font-semibold text-lg">
+        <span>Total</span>
+        <span>₹ {total}</span>
+      </div>
+
+      <Button size="lg" onClick={completeSale}>
+        Complete Sale
+      </Button>
+    </div>
+  );
 }

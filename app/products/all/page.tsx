@@ -1,77 +1,41 @@
-import { PageTitle } from "@/components/app/page-title";
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from "@/components/ui/table";
 import prisma from "@/lib/prisma";
+import { getSession } from "@/lib/session";
+import ProductsClientTable from "./products-client-table";
 
-export default async function AllProductsPage() {
-    const products = await prisma.product.findMany();
+export default async function ProductsPage() {
+  const session = await getSession();
 
-    return (
-        <div className="w-full flex flex-col justify-center p-6">
-            <PageTitle>All Products</PageTitle>
+  let role: "staff" | "admin" | "superadmin" = "staff";
 
-            <div className="flex justify-center px-4">
-                <Table className="w-full text-sm rounded-md p-0 scrollbar-hide">
-                    <TableHeader className="bg-primary/50 text-accent-foreground">
-                        <TableRow>
-                            <TableHead className="px-4 py-3 text-left font-semibold">
-                                Id
-                            </TableHead>
-                            <TableHead className="px-4 py-3 text-left font-semibold">
-                                Product Name
-                            </TableHead>
-                            <TableHead className="px-4 py-3 text-left font-semibold">
-                                Cost Price
-                            </TableHead>
-                            <TableHead className="px-4 py-3 text-left font-semibold">
-                                Selling Price
-                            </TableHead>
-                        </TableRow>
-                    </TableHeader>
+  if (session?.userId) {
+    const user = await prisma.user.findUnique({
+      where: { id: session.userId },
+      select: { role: true },
+    });
 
-                    <TableBody>
-                        {products.length > 0 ? (
-                            products.map((product) => (
-                                <TableRow key={product.id} className="border-t">
-                                    <TableCell className="px-4 py-2 font-medium">
-                                        {product.id}
-                                    </TableCell>
-                                    <TableCell className="px-4 py-2">
-                                        {product.name}
-                                    </TableCell>
-                                    <TableCell className="px-4 py-2">
-                                        ₹
-                                        {Number(
-                                            product.costPrice,
-                                        ).toLocaleString("en-IN")}
-                                    </TableCell>
-                                    <TableCell className="px-4 py-2">
-                                        ₹
-                                        {Number(
-                                            product.sellingPrice,
-                                        ).toLocaleString("en-IN")}
-                                    </TableCell>
-                                </TableRow>
-                            ))
-                        ) : (
-                            <TableRow>
-                                <TableCell
-                                    colSpan={4}
-                                    className="px-4 py-6 text-center italic"
-                                >
-                                    No products found
-                                </TableCell>
-                            </TableRow>
-                        )}
-                    </TableBody>
-                </Table>
-            </div>
-        </div>
-    );
+    if (user?.role) {
+      role = user.role as any;
+    }
+  }
+
+  const rawProducts = await prisma.product.findMany({
+  orderBy: { createdAt: "desc" },
+});
+
+const products = rawProducts.map((p) => ({
+  ...p,
+  costPrice: Number(p.costPrice),
+  sellingPrice: Number(p.sellingPrice),
+  stockQuantity: Number(p.stockQuantity),
+  stockThreshold: Number(p.stockThreshold),
+}));
+
+
+  return (
+    <div className="p-6 space-y-4">
+      <h1 className="text-xl font-semibold">All Products</h1>
+
+      <ProductsClientTable products={products} userRole={role} />
+    </div>
+  );
 }

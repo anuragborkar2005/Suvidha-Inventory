@@ -1,20 +1,34 @@
-import { AppSidebar } from "@/components/sidebar/app-sidebar";
-import { SiteHeader } from "@/components/sidebar/site-header";
-import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-import { ReactNode } from "react";
+import AppSidebar from "@/components/sidebar/app-sidebar";
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
+import { getSession } from "@/lib/session";
+import prisma from "@/lib/prisma";
 
-export default function DashboardLayout({ children }: { children: ReactNode }) {
-    return (
-        <div className="[--header-height:calc(--spacing(14))]">
-            <SidebarProvider className="flex flex-col">
-                <div className="flex flex-1">
-                    <AppSidebar />
-                    <SidebarInset>
-                        <SiteHeader />
-                        {children}
-                    </SidebarInset>
-                </div>
-            </SidebarProvider>
-        </div>
-    );
+export default async function ProductsLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const session = await getSession();
+
+  let role: "staff" | "admin" | "superadmin" = "staff";
+
+  if (session?.userId) {
+    const user = await prisma.user.findUnique({
+      where: { id: session.userId },
+      select: { role: true },
+    });
+
+    if (user?.role) {
+      role = user.role as any;
+    }
+  }
+
+  return (
+    <SidebarProvider className="flex flex-col">
+      <div className="flex flex-1">
+        <AppSidebar role={role} />
+        <SidebarInset>{children}</SidebarInset>
+      </div>
+    </SidebarProvider>
+  );
 }
