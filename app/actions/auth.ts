@@ -5,8 +5,9 @@ import {
     LoginFormState,
     SignupFormSchema,
     SignUpFormState,
+    ChangePasswordFormValues,
 } from "@/lib/definitions";
-import { createSession, deleteSession } from "@/lib/session";
+import { createSession, deleteSession, getSession } from "@/lib/session";
 import { redirect } from "next/navigation";
 import prisma from "@/lib/prisma";
 import bcrypt from "bcryptjs";
@@ -39,7 +40,13 @@ export async function signup(
     }
 
     await createSession(user.id);
-    redirect("/dashboard/overview"); // ✅ no need to return after this
+    if (user?.role == "superadmin") {
+        redirect("/dashboard/overview");
+    } else if (user?.role == "admin") {
+        redirect("/dashboard/overview");
+    } else {
+        redirect("/sales/new");
+    }
 }
 
 export async function login(
@@ -85,4 +92,31 @@ export async function getProfile(userId: string) {
 export async function logout() {
     await deleteSession();
     redirect("/login");
+}
+
+export async function changePassword(data: ChangePasswordFormValues) {
+    const session = await getSession();
+    if (!session) {
+        return { error: "You must be logged in to change your password." };
+    }
+
+    const user = await prisma.user.findUnique({
+        where: { id: session.userId },
+    });
+    if (!user) {
+        return { error: "User not found." };
+    }
+
+    const isValid = await bcrypt.compare(data.currentPassword, user.password);
+    if (!isValid) {
+        return { error: "Incorrect current password." };
+    }
+
+    const hashPassword = await bcrypt.hash(data.newPassword, 10);
+    await prisma.user.update({
+        where: { id: session.userId },
+        data: { password: hashPassword },
+    });
+
+    return { success: "Password changed successfully." };
 }

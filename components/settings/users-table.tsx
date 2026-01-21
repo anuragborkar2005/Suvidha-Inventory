@@ -1,3 +1,5 @@
+"use client";
+
 import {
     Table,
     TableBody,
@@ -15,10 +17,18 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal } from "lucide-react";
-import prisma from "@/lib/prisma";
+import { useState } from "react";
+import { User } from "@/types/user";
+import { EditUserDialog } from "./edit-user-dialog";
+import { deleteUser } from "@/app/actions/users";
 
-export default async function UsersTable() {
-    const users = await prisma.user.findMany();
+interface UsersTableProps {
+    users: User[];
+}
+
+export default function UsersTable({ users }: UsersTableProps) {
+    const [editingUser, setEditingUser] = useState<User | null>(null);
+
     return (
         <div className="border rounded-md ">
             <Table>
@@ -34,7 +44,7 @@ export default async function UsersTable() {
                 </TableHeader>
                 <TableBody>
                     {users.map((user) => (
-                        <TableRow key={user.email}>
+                        <TableRow key={user.id}>
                             <TableCell>{user.name}</TableCell>
                             <TableCell>{user.email}</TableCell>
                             <TableCell>
@@ -55,10 +65,14 @@ export default async function UsersTable() {
                                         </Button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end">
-                                        <DropdownMenuItem>
+                                        <DropdownMenuItem
+                                            onClick={() => setEditingUser(user)}
+                                        >
                                             Edit
                                         </DropdownMenuItem>
-                                        <DropdownMenuItem>
+                                        <DropdownMenuItem
+                                            onClick={() => deleteUser(user.id)}
+                                        >
                                             Delete
                                         </DropdownMenuItem>
                                     </DropdownMenuContent>
@@ -68,6 +82,13 @@ export default async function UsersTable() {
                     ))}
                 </TableBody>
             </Table>
+            {editingUser && (
+                <EditUserDialog
+                    user={editingUser}
+                    open={!!editingUser}
+                    setOpen={() => setEditingUser(null)}
+                />
+            )}
         </div>
     );
 }

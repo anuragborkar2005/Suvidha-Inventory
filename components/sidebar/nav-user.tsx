@@ -1,6 +1,12 @@
 "use client";
 
-import { BadgeCheck, Bell, ChevronsUpDown, LogOut } from "lucide-react";
+import {
+    BadgeCheck,
+    Bell,
+    ChevronsUpDown,
+    LogOut,
+    Settings,
+} from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -19,17 +25,32 @@ import {
     useSidebar,
 } from "@/components/ui/sidebar";
 import { logout } from "@/app/actions/auth";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { absoluteUrl } from "@/lib/utils";
 
-export function NavUser({
-    user,
-}: {
-    user: {
-        name: string;
-        email: string;
-        avatar: string;
-    };
-}) {
+type User = {
+    name: string;
+    email: string;
+    avatar: string;
+};
+
+export function NavUser() {
     const { isMobile } = useSidebar();
+    const router = useRouter();
+    const [user, setUser] = useState<User | null>(null);
+
+    useEffect(() => {
+        fetch(absoluteUrl("/api/auth/profile"))
+            .then((res) => res.json())
+            .then((data) => {
+                setUser(data.data);
+            });
+    }, []);
+
+    if (!user) {
+        return null;
+    }
 
     return (
         <SidebarMenu>
@@ -87,7 +108,16 @@ export function NavUser({
                                 </div>
                             </div>
                         </DropdownMenuLabel>
-
+                        <DropdownMenuSeparator />
+                        <DropdownMenuGroup>
+                            <DropdownMenuItem
+                                onClick={() => router.push("/settings/profile")}
+                            >
+                                <Settings className="mr-2 h-4 w-4" />
+                                Settings
+                            </DropdownMenuItem>
+                        </DropdownMenuGroup>
+                        <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={logout}>
                             <LogOut />
                             Log out

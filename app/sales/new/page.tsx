@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { createSale } from "@/app/actions/createSale";
 import { toast } from "sonner";
 
 // UI Components
@@ -40,20 +39,23 @@ import {
     IndianRupee,
 } from "lucide-react";
 import { format } from "date-fns";
+import { Product } from "@/types/product";
+import { Item } from "@/types/item";
+import { createInvoice } from "@/app/actions/invoice";
 
 export default function SalesPage() {
     const [date, setDate] = useState(new Date());
     const [studentName, setStudentName] = useState("");
 
     const [search, setSearch] = useState("");
-    const [productList, setProductList] = useState<any[]>([]);
-    const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
+    const [productList, setProductList] = useState<Product[]>([]);
+    const [selectedProduct, setSelectedProduct] = useState<Product | null>(
+        null,
+    );
 
     const searchRef = useRef<HTMLInputElement>(null);
 
-    const [items, setItems] = useState<
-        { id: string; name: string; price: number; qty: number }[]
-    >([]);
+    const [items, setItems] = useState<Item[]>([]);
 
     // Focus cursor automatically
     useEffect(() => {
@@ -71,7 +73,7 @@ export default function SalesPage() {
     }
 
     // Select product from dropdown (but don't add until button clicked)
-    function chooseProduct(p: any) {
+    function chooseProduct(p: Product) {
         setSelectedProduct(p);
         setSearch(p.name);
         setProductList([]);
@@ -99,15 +101,30 @@ export default function SalesPage() {
         if (!selectedProduct)
             return toast.error("Select or scan a product first");
 
-        setItems((prev) => [
-            ...prev,
-            {
-                id: selectedProduct.id,
-                name: selectedProduct.name,
-                price: Number(selectedProduct.sellingPrice),
-                qty: 1,
-            },
-        ]);
+        setItems((prev) => {
+            const existingIndex = prev.findIndex(
+                (item) => item.id === selectedProduct.id,
+            );
+
+            if (existingIndex !== -1) {
+                const updated = [...prev];
+                updated[existingIndex] = {
+                    ...updated[existingIndex],
+                    qty: updated[existingIndex].qty + 1,
+                };
+                return updated;
+            }
+
+            return [
+                ...prev,
+                {
+                    id: selectedProduct.id,
+                    name: selectedProduct.name,
+                    price: Number(selectedProduct.sellingPrice),
+                    qty: 1,
+                },
+            ];
+        });
 
         toast.success(`${selectedProduct.name} added`);
 
@@ -117,7 +134,7 @@ export default function SalesPage() {
     }
 
     const subtotal = items.reduce((a, b) => a + b.qty * b.price, 0);
-    const total = subtotal; // GST removed as per request
+    const total = subtotal;
 
     function updateQty(id: string, qty: number) {
         setItems(items.map((i) => (i.id === id ? { ...i, qty } : i)));
@@ -132,7 +149,7 @@ export default function SalesPage() {
         if (!studentName.trim()) return toast.error("Enter student name");
         if (items.length === 0) return toast.error("Add products first");
 
-        const res = await createSale({ studentName, date, items });
+        const res = await createInvoice({ studentName, date, items });
 
         if (res.success) {
             toast.success("Invoice Saved Successfully");

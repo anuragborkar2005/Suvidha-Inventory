@@ -15,6 +15,18 @@ CREATE TABLE "users" (
 );
 
 -- CreateTable
+CREATE TABLE "store_settings" (
+    "id" INTEGER NOT NULL DEFAULT 1,
+    "storeName" VARCHAR(255) NOT NULL DEFAULT 'Suvidha Store',
+    "address" VARCHAR(255) NOT NULL DEFAULT '123, Suvidha Lane, Suvidha City',
+    "currency" VARCHAR(10) NOT NULL DEFAULT 'INR',
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "store_settings_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "products" (
     "id" TEXT NOT NULL,
     "barcode" VARCHAR(255),
@@ -47,6 +59,8 @@ CREATE TABLE "sales" (
 -- CreateTable
 CREATE TABLE "Invoice" (
     "id" TEXT NOT NULL,
+    "invoiceNumber" SERIAL NOT NULL,
+    "invoiceCode" TEXT,
     "student" TEXT NOT NULL,
     "date" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "total" DECIMAL(10,2) NOT NULL,
@@ -73,6 +87,12 @@ CREATE INDEX "sales_product_id_idx" ON "sales"("product_id");
 
 -- CreateIndex
 CREATE INDEX "sales_created_at_idx" ON "sales"("created_at");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Invoice_invoiceNumber_key" ON "Invoice"("invoiceNumber");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Invoice_invoiceCode_key" ON "Invoice"("invoiceCode");
 
 -- AddForeignKey
 ALTER TABLE "sales" ADD CONSTRAINT "sales_product_id_fkey" FOREIGN KEY ("product_id") REFERENCES "products"("id") ON DELETE CASCADE ON UPDATE CASCADE;

@@ -12,10 +12,11 @@ import {
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { DateRange } from "react-day-picker";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { fetchSale } from "@/app/actions/sales";
 
 interface Sale {
     product: {
@@ -32,8 +33,30 @@ export default function DashboardReportPage() {
         to: new Date(),
     });
 
-    const [sales] = useState<Sale[]>([]);
+    const [sales, setSales] = useState<Sale[]>([]);
 
+    useEffect(() => {
+        const loadSales = async () => {
+            if (!date?.from || !date?.to) return;
+
+            try {
+                const fetchedSales = await fetchSale(date);
+
+                const mappedSales: Sale[] = fetchedSales.map((s) => ({
+                    product: { name: s.product.name },
+                    quantity: s.quantity,
+                    totalPrice: s.totalPrice,
+                    date: s.createdAt,
+                }));
+
+                setSales(mappedSales);
+            } catch (err) {
+                console.error("Failed to fetch sales:", err);
+            }
+        };
+
+        loadSales();
+    }, [date]);
     const generateReport = () => {
         const doc = new jsPDF();
 
@@ -56,7 +79,7 @@ export default function DashboardReportPage() {
             body: sales.map((sale) => [
                 sale.product.name,
                 sale.quantity,
-                `$${sale.totalPrice.toFixed(2)}`,
+                `₹${sale.totalPrice.toFixed(2)}`,
                 sale.date,
             ]),
             theme: "striped",

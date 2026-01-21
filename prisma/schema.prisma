@@ -73,10 +73,12 @@ model Sale {
 }
 
 model Invoice {
-  id      String   @id @default(cuid())
-  student String
-  date    DateTime @default(now())
-  total   Decimal  @db.Decimal(10, 2)
+  id            String   @id @default(cuid())
+  invoiceNumber Int      @unique @default(autoincrement())
+  invoiceCode   String?  @unique
+  student       String
+  date          DateTime @default(now())
+  total         Decimal  @db.Decimal(10, 2)
 
   sales Sale[]
 

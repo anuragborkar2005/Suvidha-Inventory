@@ -5,21 +5,7 @@ import Link from "next/link";
 import "./print.css";
 import { Button } from "@/components/ui/button";
 import { PageTitle } from "@/components/app/page-title";
-
-interface Invoice {
-    id: string;
-    student: string;
-    date: string;
-    total: number;
-    sales: {
-        id: number;
-        product: {
-            name: string;
-        };
-        quantity: number;
-        totalPrice: number;
-    }[];
-}
+import { Invoice } from "@/types/invoice";
 
 export default function InvoicePage({
     params,
@@ -53,11 +39,11 @@ export default function InvoicePage({
         }
     }, [id]);
 
-    useEffect(() => {
-        if (!loading && invoice) {
-            window.print();
-        }
-    }, [loading, invoice]);
+    // useEffect(() => {
+    //     if (!loading && invoice) {
+    //         window.print();
+    //     }
+    // }, [loading, invoice]);
 
     if (loading) {
         return <div className="p-4">Loading...</div>;
@@ -72,9 +58,9 @@ export default function InvoicePage({
     }
 
     return (
-        <div className="p-4">
+        <div className="p-4 invoice-container">
             <div className="flex justify-between items-center mb-4">
-                <PageTitle>Invoice #${invoice.id.slice(0, 6)}</PageTitle>
+                <PageTitle>Invoice #{invoice.invoiceCode}</PageTitle>
                 <Button onClick={() => window.print()} className="no-print">
                     Print
                 </Button>
@@ -83,7 +69,13 @@ export default function InvoicePage({
             <div className="bg-white p-6 rounded-lg shadow-md">
                 <div className="grid grid-cols-2 gap-4 mb-4">
                     <div>
-                        <p className="font-bold">Student:</p>
+                        <p className="font-bold">Invoice Id:</p>
+                        <p>{invoice.invoiceCode}</p>
+                    </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <p className="font-bold">Student Name:</p>
                         <p>{invoice.student}</p>
                     </div>
                     <div>

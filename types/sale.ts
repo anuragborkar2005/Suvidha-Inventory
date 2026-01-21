@@ -1,4 +1,4 @@
-import { Prisma } from "@prisma/client";
+import { Prisma } from "@/lib/generated/prisma/client";
 import { Product } from "./product";
 
 export interface Sale {
@@ -6,8 +6,8 @@ export interface Sale {
     productId: string;
     product: Product;
     quantity: number;
-    totalPrice: Prisma.Decimal;
-    totalCost: Prisma.Decimal;
+    totalPrice: number;
+    totalCost: number;
     createdAt: Date;
     updatedAt: Date;
 }

@@ -7,11 +7,8 @@ import { Button } from "@/components/ui/button";
 
 export default function AddProductForm() {
     return (
-        // Added padding and changed h-full to min-h-screen for better scrolling on mobile
         <div className="flex justify-center items-start lg:items-center min-h-screen bg-slate-50/50 p-4 md:p-8">
             <Card className="w-full max-w-3xl shadow-lg">
-                {" "}
-                {/* Increased max-width for desktop */}
                 <CardHeader className="border-b mb-6">
                     <CardTitle className="text-2xl font-bold">
                         Add a New Product
@@ -19,14 +16,8 @@ export default function AddProductForm() {
                 </CardHeader>
                 <CardContent>
                     <form action={addProduct} className="space-y-6">
-                        {/* Grid Container:
-                           1 column on mobile (default)
-                           2 columns on medium screens and up (md:grid-cols-2)
-                        */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="md:col-span-2">
-                                {" "}
-                                {/* Name spans full width */}
                                 <Label htmlFor="name" className="mb-2 block">
                                     Product Name
                                 </Label>

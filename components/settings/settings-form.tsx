@@ -3,6 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { useEffect } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -16,6 +17,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { absoluteUrl } from "@/lib/utils";
 
 const settingsFormSchema = z.object({
     storeName: z.string().min(2, {
@@ -31,29 +33,41 @@ const settingsFormSchema = z.object({
 
 type SettingsFormValues = z.infer<typeof settingsFormSchema>;
 
-// This can be used to get the default values from the server
-const defaultValues: Partial<SettingsFormValues> = {
-    storeName: "",
-    address: "",
-    currency: "INR",
-};
-
 export default function SettingsForm() {
     const form = useForm<SettingsFormValues>({
         resolver: zodResolver(settingsFormSchema),
-        defaultValues,
+        defaultValues: {
+            storeName: "",
+            address: "",
+            currency: "INR",
+        },
     });
 
-    function onSubmit(data: SettingsFormValues) {
-        toast("You submitted the following values:", {
-            description: (
-                <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-                    <code className="text-white">
-                        {JSON.stringify(data, null, 2)}
-                    </code>
-                </pre>
-            ),
-        });
+    useEffect(() => {
+        fetch(absoluteUrl("/api/settings/application"))
+            .then((res) => res.json())
+            .then((data) => {
+                form.reset(data);
+            });
+    }, [form]);
+
+    async function onSubmit(data: SettingsFormValues) {
+        const response = await fetch(
+            absoluteUrl("/api/settings/application"),
+            {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(data),
+            },
+        );
+
+        if (response.ok) {
+            toast.success("Settings updated successfully.");
+        } else {
+            toast.error("Failed to update settings.");
+        }
     }
 
     return (
