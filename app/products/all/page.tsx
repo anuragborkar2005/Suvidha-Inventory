@@ -1,6 +1,6 @@
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/session";
-import ProductsClientTable from "./products-client-table";
+import ProductsClientTable from "@/components/products/products-client-table";
 
 export default async function ProductsPage() {
   const session = await getSession();

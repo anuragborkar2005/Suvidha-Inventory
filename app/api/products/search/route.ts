@@ -1,7 +1,8 @@
 import prisma from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { withAuth } from "@/lib/proxy";
 
-export async function GET(req: Request) {
+export const GET = withAuth(async (req) => {
   try {
     const { searchParams } = new URL(req.url);
     const q = searchParams.get("q") || "";
@@ -23,6 +24,7 @@ export async function GET(req: Request) {
         name: true,
         sellingPrice: true,
         barcode: true,
+        category: true,
       },
     });
 
@@ -31,4 +33,4 @@ export async function GET(req: Request) {
     console.error("SEARCH API ERROR:", error);
     return NextResponse.json([], { status: 200 });
   }
-}
+}, "viewProducts");

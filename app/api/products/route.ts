@@ -1,42 +1,36 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { withAuth } from "@/lib/proxy";
 
-
-export async function POST(req: Request) {
+export const POST = withAuth(async (req) => {
   try {
     const body = await req.json();
 
-    console.log("🔥 PRODUCT CREATE BODY:", body);
-
     const product = await prisma.product.create({
       data: {
-        name: body.name || "TEST PRODUCT",
-        barcode: body.barcode || "0000",
-        category: body.category || "TEST",
-        stockQuantity: Number(body.stockQuantity || 1),
-        stockThreshold: Number(body.stockThreshold || 1),
-        costPrice: Number(body.costPrice || 1),
-        sellingPrice: Number(body.sellingPrice || 1),
+        name: body.name,
+        barcode: body.barcode,
+        category: body.category,
+        stockQuantity: Number(body.stockQuantity),
+        stockThreshold: Number(body.stockThreshold),
+        costPrice: Number(body.costPrice),
+        sellingPrice: Number(body.sellingPrice),
       },
     });
 
-    console.log("✅ PRODUCT CREATED:", product);
-
     return NextResponse.json(product);
   } catch (error) {
-    console.error("❌ PRODUCT CREATE FAILED:", error);
     return NextResponse.json(
       { error: "Product creation failed" },
       { status: 500 }
     );
   }
-}
+}, "editProducts");
 
-
-export async function GET() {
+export const GET = withAuth(async () => {
   const products = await prisma.product.findMany({
     orderBy: { createdAt: "desc" },
   });
 
   return NextResponse.json(products);
-}
+}, "viewProducts");

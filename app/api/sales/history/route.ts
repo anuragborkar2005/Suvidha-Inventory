@@ -16,6 +16,8 @@ export async function GET() {
 
     const formatted = sales.map((sale) => ({
       id: sale.id,
+      receiptId: sale.receiptId,
+      customerName: sale.customerName,
       productName: sale.product.name,
       quantity: sale.quantity,
       totalPrice: Number(sale.totalPrice),

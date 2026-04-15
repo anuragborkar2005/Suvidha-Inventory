@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { items } = body;
+    const { items, customerName } = body;
 
     if (!items || items.length === 0) {
       return NextResponse.json(
@@ -12,6 +12,8 @@ export async function POST(req: Request) {
         { status: 400 }
       );
     }
+
+    const receiptId = "REC-" + Math.random().toString(36).substring(2, 9).toUpperCase();
 
     await prisma.$transaction(async (tx) => {
       for (const item of items) {
@@ -32,6 +34,8 @@ export async function POST(req: Request) {
         
         await tx.sale.create({
           data: {
+            receiptId,
+            customerName: customerName || "General Customer",
             productId: product.id,
             quantity: item.qty,
             totalPrice,
@@ -51,7 +55,7 @@ export async function POST(req: Request) {
       }
     });
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, receiptId });
   } catch (error) {
     console.error("❌ SALE ERROR:", error);
 

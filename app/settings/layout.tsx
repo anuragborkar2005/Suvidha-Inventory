@@ -6,7 +6,7 @@ import { redirect } from "next/navigation";
 import { Separator } from "@/components/ui/separator";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 
-export default async function SalesLayout({
+export default async function SettingsLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -44,7 +44,7 @@ export default async function SalesLayout({
                 </BreadcrumbItem>
                 <BreadcrumbSeparator className="hidden md:block" />
                 <BreadcrumbItem>
-                  <BreadcrumbPage>Sales</BreadcrumbPage>
+                  <BreadcrumbPage>Settings</BreadcrumbPage>
                 </BreadcrumbItem>
               </BreadcrumbList>
             </Breadcrumb>

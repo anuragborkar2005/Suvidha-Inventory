@@ -1,6 +1,5 @@
 import { JWTPayload, jwtVerify, SignJWT } from "jose";
 import { cookies } from "next/headers";
-import "server-only";
 
 export interface Session extends JWTPayload {
   userId: string;
