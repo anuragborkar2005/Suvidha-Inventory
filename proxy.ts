@@ -1,32 +1,31 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSession } from "@/lib/session";
+import { decrypt } from "@/lib/session";
 
-const protectedRoutes = ["/dashboard"];
+const protectedRoutes = ["/dashboard", "/products", "/sales", "/settings"];
 const publicRoutes = ["/login", "/signup", "/"];
 
 export default async function proxy(req: NextRequest) {
     const path = req.nextUrl.pathname;
-    const isProtectedRoute = protectedRoutes.includes(path);
+
+    const isProtectedRoute = protectedRoutes.some((route) =>
+        path.startsWith(route),
+    );
     const isPublicRoute = publicRoutes.includes(path);
 
-    const session = await getSession();
+    const cookie = req.cookies.get("session")?.value;
+    const session = await decrypt(cookie);
 
     if (isProtectedRoute && !session?.userId) {
         return NextResponse.redirect(new URL("/login", req.nextUrl));
     }
 
-    if (
-        isPublicRoute &&
-        session?.userId &&
-        !req.nextUrl.pathname.startsWith("/dashboard")
-    ) {
+    if (isPublicRoute && session?.userId && !path.startsWith("/dashboard")) {
         return NextResponse.redirect(new URL("/dashboard", req.nextUrl));
     }
 
     return NextResponse.next();
 }
 
-// Routes Proxy should not run on
 export const config = {
     matcher: ["/((?!api|_next/static|_next/image|.*\\.png$).*)"],
 };

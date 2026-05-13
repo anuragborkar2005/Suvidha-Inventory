@@ -39,7 +39,7 @@ export async function signup(
     }
 
     await createSession(user.id);
-    redirect("/dashboard/overview"); // ✅ no need to return after this
+    redirect("/dashboard/overview");
 }
 
 export async function login(

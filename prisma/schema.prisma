@@ -44,16 +44,19 @@ model Product {
 }
 
 model Sale {
-  id         Int      @id @default(autoincrement())
-  productId  String   @map("product_id")
-  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  quantity   Int
-  totalPrice Decimal  @map("total_price") @db.Decimal(10, 2)
-  totalCost  Decimal  @map("total_cost") @db.Decimal(10, 2)
-  createdAt  DateTime @default(now()) @map("created_at")
-  updatedAt  DateTime @updatedAt @map("updated_at")
+  id           Int      @id @default(autoincrement())
+  receiptId    String?  @map("receipt_id") @db.VarChar(50)
+  customerName String?  @map("customer_name") @db.VarChar(255)
+  productId    String   @map("product_id")
+  product      Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  quantity     Int
+  totalPrice   Decimal  @map("total_price") @db.Decimal(10, 2)
+  totalCost    Decimal  @map("total_cost") @db.Decimal(10, 2)
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
 
   @@index([productId])
   @@index([createdAt])
+  @@index([receiptId])
   @@map("sales")
 }
