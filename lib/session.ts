@@ -5,7 +5,6 @@ export interface Session extends JWTPayload {
   userId: string;
 }
 
-// ✅ SAFETY CHECK
 if (!process.env.SECRET_KEY || process.env.SECRET_KEY.length < 10) {
   throw new Error(
     "SECRET_KEY is missing or too short in environment variables"

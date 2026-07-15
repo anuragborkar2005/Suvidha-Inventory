@@ -17,8 +17,8 @@ import type * as Prisma from "./prismaNamespace"
 
 const config: runtime.GetPrismaClientConfig = {
   "previewFeatures": [],
-  "clientVersion": "7.7.0",
-  "engineVersion": "75cbdc1eb7150937890ad5465d861175c6624711",
+  "clientVersion": "7.8.0",
+  "engineVersion": "3c6e192761c0362d496ed980de936e2f3cebcd3a",
   "activeProvider": "postgresql",
   "inlineSchema": "generator client {\n  provider = \"prisma-client\"\n  output   = \"../prisma/generated/client\"\n}\n\ndatasource db {\n  provider = \"postgresql\"\n}\n\nenum Role {\n  superadmin\n  admin\n  staff\n}\n\nmodel User {\n  id        String   @id @default(cuid())\n  name      String   @db.VarChar(255)\n  email     String   @unique @db.VarChar(255)\n  password  String   @db.VarChar(255)\n  role      Role     @default(staff)\n  createdAt DateTime @default(now()) @map(\"created_at\")\n  updatedAt DateTime @updatedAt @map(\"updated_at\")\n\n  @@map(\"users\")\n}\n\nmodel Product {\n  id             String   @id @default(cuid())\n  barcode        String?  @unique @db.VarChar(255)\n  name           String   @db.VarChar(255)\n  category       String   @default(\"general\") @db.VarChar(100)\n  stockQuantity  Int      @default(0) @map(\"stock_quantity\")\n  stockThreshold Int      @default(30) @map(\"stock_threshold\")\n  costPrice      Decimal  @map(\"cost_price\") @db.Decimal(10, 2)\n  sellingPrice   Decimal  @map(\"selling_price\") @db.Decimal(10, 2)\n  sales          Sale[]\n  createdAt      DateTime @default(now()) @map(\"created_at\")\n  updatedAt      DateTime @updatedAt @map(\"updated_at\")\n\n  @@index([id])\n  @@index([name])\n  @@map(\"products\")\n}\n\nmodel Sale {\n  id           Int      @id @default(autoincrement())\n  receiptId    String?  @map(\"receipt_id\") @db.VarChar(50)\n  customerName String?  @map(\"customer_name\") @db.VarChar(255)\n  productId    String   @map(\"product_id\")\n  product      Product  @relation(fields: [productId], references: [id], onDelete: Cascade)\n  quantity     Int\n  totalPrice   Decimal  @map(\"total_price\") @db.Decimal(10, 2)\n  totalCost    Decimal  @map(\"total_cost\") @db.Decimal(10, 2)\n  createdAt    DateTime @default(now()) @map(\"created_at\")\n  updatedAt    DateTime @updatedAt @map(\"updated_at\")\n\n  @@index([productId])\n  @@index([createdAt])\n  @@index([receiptId])\n  @@map(\"sales\")\n}\n",
   "runtimeDataModel": {
@@ -180,7 +180,7 @@ export interface PrismaClient<
    * 
    * Read more in our [docs](https://www.prisma.io/docs/orm/prisma-client/queries/transactions).
    */
-  $transaction<P extends Prisma.PrismaPromise<any>[]>(arg: [...P], options?: { isolationLevel?: Prisma.TransactionIsolationLevel }): runtime.Types.Utils.JsPromise<runtime.Types.Utils.UnwrapTuple<P>>
+  $transaction<P extends Prisma.PrismaPromise<any>[]>(arg: [...P], options?: { maxWait?: number, timeout?: number, isolationLevel?: Prisma.TransactionIsolationLevel }): runtime.Types.Utils.JsPromise<runtime.Types.Utils.UnwrapTuple<P>>
 
   $transaction<R>(fn: (prisma: Omit<PrismaClient, runtime.ITXClientDenyList>) => runtime.Types.Utils.JsPromise<R>, options?: { maxWait?: number, timeout?: number, isolationLevel?: Prisma.TransactionIsolationLevel }): runtime.Types.Utils.JsPromise<R>
 
